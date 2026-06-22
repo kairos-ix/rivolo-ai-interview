@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import axiosInstance from "@/lib/axios";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Code, Atom, FileJson, BarChart, Settings, 
@@ -433,15 +433,7 @@ const DashboardPage = () => {
   const [showDeleteModalId, setShowDeleteModalId] = useState<string | null>(null);
   const [deleteActionLoading, setDeleteActionLoading] = useState(false);
 
-  useEffect(() => {
-    if (!authLoading && !isLoggedIn) router.push("/login");
-  }, [isLoggedIn, authLoading, router]);
-
-  useEffect(() => {
-    if (isLoggedIn) fetchInterviews();
-  }, [isLoggedIn]);
-
-  const fetchInterviews = async () => {
+  const fetchInterviews = useCallback(async () => {
     try {
       setDataLoading(true);
       const { data } = await axiosInstance.get("/api/interviews");
@@ -450,7 +442,19 @@ const DashboardPage = () => {
       const sorted = [...fetched].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       setIntervies(sorted);
     } catch (error) { console.error(error); } finally { setDataLoading(false); }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading && !isLoggedIn) router.push("/login");
+  }, [isLoggedIn, authLoading, router]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      setTimeout(() => {
+        fetchInterviews();
+      }, 0);
+    }
+  }, [isLoggedIn, fetchInterviews]);
 
   const handleSelectDomain = (domain: string) => router.push(`/interview?domain=${encodeURIComponent(domain)}`);
 
@@ -751,6 +755,42 @@ const DashboardPage = () => {
                       </div>
                     )}
 
+                    {/* Adaptive Progression Report */}
+                    {interviewDetails.progressionReport && (
+                      <div className="p-4 bg-card border border-border/50 rounded-xl">
+                        <p className="text-xs font-bold text-foreground mb-3 flex items-center gap-1.5">
+                          <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                          Adaptive Progression
+                        </p>
+                        <div className="flex items-center justify-between p-3 bg-muted/40 rounded-xl border border-border/40 mb-3">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Start Level</p>
+                            <p className="text-sm font-bold uppercase">{interviewDetails.progressionReport.startDifficulty}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Peak Level</p>
+                            <p className="text-sm font-bold uppercase text-primary">{interviewDetails.progressionReport.peakDifficulty}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">End Level</p>
+                            <p className="text-sm font-bold uppercase">{interviewDetails.progressionReport.endDifficulty}</p>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          {interviewDetails.progressionReport.overallTrajectory}
+                        </p>
+                        {interviewDetails.progressionReport.adaptations && interviewDetails.progressionReport.adaptations.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-border/40 space-y-1">
+                            {interviewDetails.progressionReport.adaptations.map((adapt: string, i: number) => (
+                              <p key={i} className="text-xs text-muted-foreground flex items-center gap-2">
+                                <span className="w-1 h-1 rounded-full bg-primary" /> {adapt}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Conversation History */}
                     <div>
                       <p className="text-xs font-bold text-foreground mb-3 uppercase tracking-wider">
@@ -771,6 +811,17 @@ const DashboardPage = () => {
                                   : "bg-muted border border-border/50 text-foreground"
                               }`}
                             >
+                              {msg.role === "ai" && msg.difficulty && (
+                                <div className="mb-2">
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${
+                                    msg.difficulty === "easy" ? "bg-green-500/10 text-green-600 border-green-500/20" :
+                                    msg.difficulty === "medium" ? "bg-orange-500/10 text-orange-600 border-orange-500/20" :
+                                    "bg-red-500/10 text-red-600 border-red-500/20"
+                                  }`}>
+                                    {msg.difficulty}
+                                  </span>
+                                </div>
+                              )}
                               {msg.content}
                             </div>
                           </div>

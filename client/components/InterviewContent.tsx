@@ -7,19 +7,20 @@ import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import axiosInstance from "@/lib/axios";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileJson, Atom, Code, BarChart, Settings, 
   Server, Database, Target, Rocket, Dumbbell, 
   Star, Clock, PartyPopper, HelpCircle, Timer, 
-  RefreshCw, Lightbulb, Shield, Lock, Wifi
+  RefreshCw, Lightbulb, Shield, Lock, Wifi, TrendingUp
 } from "lucide-react";
 interface Message {
   id: string;
   content: string;
   isUser: boolean;
   timestamp: Date;
+  difficulty?: string;
 }
 interface InterviewSession {
   id: string;
@@ -28,7 +29,7 @@ interface InterviewSession {
   isComplete?: boolean;
 }
 
-const TOTAL_QUESTIONS = 3;
+const TOTAL_QUESTIONS = 5;
 
 const domainEmoji: Record<string, React.ReactNode> = {
   JavaScript: <FileJson className="w-5 h-5" />,
@@ -57,41 +58,72 @@ const InterviewContent = () => {
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [sessionStartTime] = useState(Date.now());
+  const [sessionStartTime] = useState(() => Date.now());
   const [serverWaking, setServerWaking] = useState(false);
   const [retryCountdown, setRetryCountdown] = useState(0);
   const [retryAttempt, setRetryAttempt] = useState(0);
+  
+  // Adaptive State
+  const [currentDifficulty, setCurrentDifficulty] = useState<string>("medium");
+  const [progressionReport, setProgressionReport] = useState<any>(null);
 
-  useEffect(() => {
-    if (!authLoading && !isLoggedIn) {
-      router.push("/login");
-    }
-  }, [isLoggedIn, authLoading, router]);
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      const activeSessionId = sessionStorage.getItem("activeInterviewSessionId");
-      if (activeSessionId) {
-        resumeInterview(activeSessionId);
-      } else {
-        startInterview();
+  const startInterview = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setServerWaking(false);
+      const { data } = await axiosInstance.post("/api/interviews/start", {
+        domain,
+      });
+      if (data) {
+        setSessionId(data.sessionId);
+        sessionStorage.setItem("activeInterviewSessionId", data.sessionId);
+        sessionStorage.setItem("interviewStartTime", Date.now().toString());
+        setQuestionsAnswered(0);
+        setRetryAttempt(0);
+        setServerWaking(false);
+        setElapsedSeconds(0);
+        setCurrentDifficulty(data.difficulty || "medium");
+        setProgressionReport(null);
+        setMessages([
+          {
+            id: "1",
+            content: data.question || "Tell me about yourself",
+            isUser: false,
+            timestamp: new Date(),
+            difficulty: data.difficulty || "medium",
+          },
+        ]);
       }
+    } catch (error: any) {
+      setRetryAttempt((prev) => {
+        const attempt = prev + 1;
+        setServerWaking(true);
+        setMessages([]);
+        if (attempt <= 5) {
+          setRetryCountdown(10 + (attempt - 1) * 5);
+        }
+        return attempt;
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, [isLoggedIn]);
+  }, [domain]);
 
-  const resumeInterview = async (id: string) => {
+  const resumeInterview = useCallback(async (id: string) => {
     try {
       setIsLoading(true);
       const { data } = await axiosInstance.get(`/api/interviews/${id}`);
       if (data && data.interview && !data.interview.isComplete && data.interview.domain === domain) {
         setSessionId(data.interview._id);
         setQuestionsAnswered(data.interview.questionsAnswered || 0);
+        setCurrentDifficulty(data.interview.currentDifficulty || "medium");
         
         const mappedMessages = data.interview.messages.map((m: any, i: number) => ({
           id: m._id || i.toString(),
           content: m.content,
           isUser: m.role === "user",
           timestamp: new Date(m.timestamp || data.interview.createdAt),
+          difficulty: m.difficulty
         }));
         setMessages(mappedMessages);
         
@@ -113,7 +145,26 @@ const InterviewContent = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [domain, startInterview]);
+
+  useEffect(() => {
+    if (!authLoading && !isLoggedIn) {
+      router.push("/login");
+    }
+  }, [isLoggedIn, authLoading, router]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      const activeSessionId = sessionStorage.getItem("activeInterviewSessionId");
+      setTimeout(() => {
+        if (activeSessionId) {
+          resumeInterview(activeSessionId);
+        } else {
+          startInterview();
+        }
+      }, 0);
+    }
+  }, [isLoggedIn, resumeInterview, startInterview]);
 
   useEffect(() => {
     if (isInterviewComplete) return;
@@ -121,7 +172,6 @@ const InterviewContent = () => {
     return () => clearInterval(t);
   }, [isInterviewComplete]);
 
-  // Auto-retry countdown
   useEffect(() => {
     if (retryCountdown <= 0) return;
     const t = setInterval(() => {
@@ -134,45 +184,7 @@ const InterviewContent = () => {
       });
     }, 1000);
     return () => clearInterval(t);
-  }, [retryCountdown]);
-
-  const startInterview = async () => {
-    try {
-      setIsLoading(true);
-      setServerWaking(false);
-      const { data } = await axiosInstance.post("/api/interviews/start", {
-        domain,
-      });
-      if (data) {
-        setSessionId(data.sessionId);
-        sessionStorage.setItem("activeInterviewSessionId", data.sessionId);
-        sessionStorage.setItem("interviewStartTime", Date.now().toString());
-        setQuestionsAnswered(0);
-        setRetryAttempt(0);
-        setServerWaking(false);
-        setElapsedSeconds(0);
-        setMessages([
-          {
-            id: "1",
-            content: data.question || "Tell me about yourself",
-            isUser: false,
-            timestamp: new Date(),
-          },
-        ]);
-      }
-    } catch (error: any) {
-      const attempt = retryAttempt + 1;
-      setRetryAttempt(attempt);
-      setServerWaking(true);
-      setMessages([]);
-      // Auto-retry with increasing delay (10s, 15s, 20s...)
-      if (attempt <= 5) {
-        setRetryCountdown(10 + (attempt - 1) * 5);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [retryCountdown, startInterview]);
   const formatTime = (s: number) =>
     `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
   const handleSendMessage = async (userMessage: string) => {
@@ -201,16 +213,18 @@ const InterviewContent = () => {
           ...prev,
           {
             id: Date.now().toString(),
-            content:
-              data.feedback ||
-              "Good answer! Your response demonstrates solid understanding",
+            content: data.feedback || "Good answer! Your response demonstrates solid understanding",
             isUser: false,
             timestamp: new Date(),
           },
         ]);
+        
+        if (data.difficulty) setCurrentDifficulty(data.difficulty);
+
         if (data.isComplete || (data.questionsAnswered !== undefined && data.questionsAnswered >= TOTAL_QUESTIONS)) {
           setInterviewScore(data.score || 75);
           setIsInterviewComplete(true);
+          if (data.progressionReport) setProgressionReport(data.progressionReport);
           sessionStorage.removeItem("activeInterviewSessionId");
           sessionStorage.removeItem("interviewStartTime");
         } else if (data.nextQuestion) {
@@ -222,6 +236,7 @@ const InterviewContent = () => {
                 content: data.nextQuestion,
                 isUser: false,
                 timestamp: new Date(),
+                difficulty: data.difficulty,
               },
             ]);
           }, 500);
@@ -290,14 +305,23 @@ const InterviewContent = () => {
                     {domain} Interview
                   </h1>
                   {!isInterviewComplete && (
-                    <span className="flex items-center gap-1 text-xs bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full font-medium flex-shrink-0">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                      Live
-                    </span>
+                    <>
+                      <span className="flex items-center gap-1 text-xs bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full font-medium flex-shrink-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                        Live
+                      </span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0 uppercase ${
+                        currentDifficulty === "easy" ? "bg-green-500/10 text-green-600 border-green-500/20" :
+                        currentDifficulty === "medium" ? "bg-orange-500/10 text-orange-600 border-orange-500/20" :
+                        "bg-red-500/10 text-red-600 border-red-500/20"
+                      }`}>
+                        {currentDifficulty}
+                      </span>
+                    </>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  AI Mock Interview Session
+                  Adaptive Mock Session
                 </p>
               </div>
             </div>
@@ -373,7 +397,7 @@ const InterviewContent = () => {
                       Interview Complete!
                     </h2>
                     <p className="text-sm text-muted-foreground mb-8">
-                      Here's how you performed
+                      Here's your final weighted score
                     </p>
 
                     <ScoreRing score={score} />
@@ -416,41 +440,50 @@ const InterviewContent = () => {
                     ))}
                   </div>
 
-                  {/* Score breakdown */}
-                  <Card className="p-6 border border-border/50">
-                    <p className="text-sm font-semibold text-foreground mb-4">
-                      Performance Breakdown
-                    </p>
-                    {[
-                      {
-                        label: "Technical Accuracy",
-                        pct: Math.min(score + 5, 100),
-                      },
-                      {
-                        label: "Communication Clarity",
-                        pct: Math.max(score - 8, 0),
-                      },
-                      {
-                        label: "Problem-Solving Approach",
-                        pct: Math.min(score + 2, 100),
-                      },
-                    ].map((bar, i) => (
-                      <div key={i} className="mb-3 last:mb-0">
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-muted-foreground">{bar.label}</span>
-                          <span className="font-semibold text-foreground">
-                            {bar.pct}%
-                          </span>
-                        </div>
-                        <div className="h-1.5 bg-border rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary rounded-full transition-all duration-1000"
-                            style={{ width: `${bar.pct}%` }}
-                          />
-                        </div>
+                  {/* Adaptive Progression Report */}
+                  {progressionReport && (
+                    <Card className="p-6 border border-border/50">
+                      <div className="flex items-center gap-2 mb-4">
+                        <TrendingUp className="w-5 h-5 text-primary" />
+                        <p className="text-sm font-semibold text-foreground">
+                          Adaptive Progression
+                        </p>
                       </div>
-                    ))}
-                  </Card>
+                      
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between p-3 bg-muted/40 rounded-xl border border-border/40">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Start Level</p>
+                            <p className="text-sm font-bold uppercase">{progressionReport.startDifficulty}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Peak Level</p>
+                            <p className="text-sm font-bold uppercase text-primary">{progressionReport.peakDifficulty}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">End Level</p>
+                            <p className="text-sm font-bold uppercase">{progressionReport.endDifficulty}</p>
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-foreground bg-primary/5 p-3 rounded-xl border border-primary/20">
+                          {progressionReport.overallTrajectory}
+                        </p>
+
+                        {progressionReport.adaptations && progressionReport.adaptations.length > 0 && (
+                          <div className="space-y-2 mt-4">
+                            <p className="text-xs font-bold text-muted-foreground">Key Adaptations:</p>
+                            {progressionReport.adaptations.map((adapt: string, i: number) => (
+                              <p key={i} className="text-xs text-muted-foreground flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                                {adapt}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  )}
 
                   {/* Actions */}
                   <div className="grid grid-cols-2 gap-3 pt-2">
@@ -462,6 +495,8 @@ const InterviewContent = () => {
                         setQuestionsAnswered(0);
                         setMessages([]);
                         setElapsedSeconds(0);
+                        setCurrentDifficulty("medium");
+                        setProgressionReport(null);
                         sessionStorage.removeItem("activeInterviewSessionId");
                         sessionStorage.removeItem("interviewStartTime");
                         startInterview();

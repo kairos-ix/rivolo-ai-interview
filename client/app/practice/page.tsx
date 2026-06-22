@@ -88,7 +88,11 @@ export default function PracticePage() {
 
   useEffect(() => {
     const savedDomain = sessionStorage.getItem("selectedDomain");
-    if (savedDomain) setSelectedDomain(savedDomain);
+    if (savedDomain) {
+      setTimeout(() => {
+        setSelectedDomain(savedDomain);
+      }, 0);
+    }
   }, []);
 
   const handleSelectDomain = (domain: string) => {
@@ -128,8 +132,8 @@ export default function PracticePage() {
             Practice Interview
           </h1>
           <p className="text-muted-foreground max-w-lg">
-            Choose a domain to start a mock interview. Each session includes 3
-            AI-generated questions tailored to the topic.
+            Choose a domain to start a mock interview. Each session includes 5
+            adaptive AI-generated questions tailored to the topic and your performance.
           </p>
         </section>
 

@@ -8,7 +8,7 @@ import React, { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 
-const page = () => {
+const LoginPage = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -18,7 +18,10 @@ const page = () => {
     const savedData = sessionStorage.getItem("loginFormData");
     if (savedData) {
       try {
-        setFormData(JSON.parse(savedData));
+        const parsed = JSON.parse(savedData);
+        setTimeout(() => {
+          setFormData(parsed);
+        }, 0);
       } catch (err) {}
     }
   }, []);
@@ -164,4 +167,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default LoginPage;

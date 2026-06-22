@@ -25,7 +25,9 @@ export default function VerifyEmailPage() {
     if (!savedEmail) {
       router.push("/login");
     } else {
-      setEmail(savedEmail);
+      setTimeout(() => {
+        setEmail(savedEmail);
+      }, 0);
     }
   }, [router]);
 

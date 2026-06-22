@@ -14,7 +14,7 @@ const passwordChecks = [
   { label: "At least one special character", test: (pw: string) => /[@$!%*?&]/.test(pw) },
 ];
 
-const page = () => {
+const RegisterPage = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -25,7 +25,10 @@ const page = () => {
     const savedData = sessionStorage.getItem("registerFormData");
     if (savedData) {
       try {
-        setFormData(JSON.parse(savedData));
+        const parsed = JSON.parse(savedData);
+        setTimeout(() => {
+          setFormData(parsed);
+        }, 0);
       } catch (err) {}
     }
   }, []);
@@ -189,4 +192,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default RegisterPage;

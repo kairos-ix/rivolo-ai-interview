@@ -8,6 +8,7 @@ interface Message {
   content: string;
   isUser: boolean;
   timestamp: Date;
+  difficulty?: string;
 }
 interface ChatContainerProps {
   messages: Message[];
@@ -47,14 +48,31 @@ const ChatContainer = ({ messages, isLoading }: ChatContainerProps) => {
                 <Bot className="w-4 h-4 text-primary" />
               </div>
             )}
-            <div
-              className={`max-w-[85%] sm:max-w-2xl px-5 py-3.5 rounded-3xl text-sm leading-relaxed shadow-sm ${
-                message.isUser
-                  ? "bg-primary text-primary-foreground rounded-br-sm"
-                  : "bg-card border border-border/50 text-foreground rounded-bl-sm"
-              }`}
-            >
-              <p className="whitespace-pre-wrap">{message.content}</p>
+            <div className={`flex flex-col ${message.isUser ? "items-end" : "items-start"}`}>
+              {!message.isUser && message.difficulty && (
+                <div className="mb-1 ml-1">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                    message.difficulty === "easy" ? "bg-green-500/10 text-green-600 border-green-500/20" :
+                    message.difficulty === "medium" ? "bg-orange-500/10 text-orange-600 border-orange-500/20" :
+                    "bg-red-500/10 text-red-600 border-red-500/20"
+                  }`}>
+                    {message.difficulty.toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <div
+                className={`max-w-[85%] sm:max-w-2xl px-5 py-3.5 rounded-3xl text-sm leading-relaxed shadow-sm ${
+                  message.isUser
+                    ? "bg-primary text-primary-foreground rounded-br-sm"
+                    : `bg-card border border-border/50 text-foreground rounded-bl-sm ${
+                        message.difficulty === "easy" ? "border-l-2 border-l-green-500" :
+                        message.difficulty === "medium" ? "border-l-2 border-l-orange-500" :
+                        message.difficulty === "hard" ? "border-l-2 border-l-red-500" : ""
+                      }`
+                }`}
+              >
+                <p className="whitespace-pre-wrap">{message.content}</p>
+              </div>
             </div>
           </motion.div>
         ))}

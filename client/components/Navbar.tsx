@@ -32,6 +32,27 @@ export function Navbar() {
     return () => clearTimeout(t);
   }, [pathname]);
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    setMobileOpen(false);
+    if (href.startsWith("/#") && pathname === "/") {
+      e.preventDefault();
+      const targetId = href.replace("/#", "");
+      const elem = document.getElementById(targetId);
+      if (elem) {
+        const offset = 80;
+        const bodyRect = document.body.getBoundingClientRect().top;
+        const elementRect = elem.getBoundingClientRect().top;
+        const elementPosition = elementRect - bodyRect;
+        const offsetPosition = elementPosition - offset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth"
+        });
+      }
+    }
+  };
+
   const isActive = (path: string) => pathname === path;
 
   // User's first initial for avatar
@@ -66,6 +87,7 @@ export function Navbar() {
           <Link
             href="/"
             className="flex items-center gap-2.5 group flex-shrink-0"
+            onClick={() => setMobileOpen(false)}
           >
             <Image src="/favicon.svg" alt="Logo" width={36} height={36} className="rounded-xl shadow-md group-hover:scale-105 transition-transform duration-200" />
             <div className="flex flex-col leading-none">
@@ -81,7 +103,7 @@ export function Navbar() {
           {/* ── Desktop Nav Links ── */}
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
-              <Link key={link.href} href={link.href}>
+              <Link key={link.href} href={link.href} onClick={(e) => handleNavClick(e, link.href)}>
                 <button
                   className={`relative px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 ${
                     isActive(link.href)
@@ -192,7 +214,7 @@ export function Navbar() {
         <div className="bg-background/95 backdrop-blur-xl border-t border-border/50 px-4 py-4 space-y-1">
           {/* Nav links */}
           {navLinks.map((link) => (
-            <Link key={link.href} href={link.href}>
+            <Link key={link.href} href={link.href} onClick={(e) => handleNavClick(e, link.href)}>
               <div
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                   isActive(link.href)
@@ -237,7 +259,7 @@ export function Navbar() {
                   { href: "/dashboard", label: "Dashboard", icon: <Zap className="w-4 h-4" /> },
                   { href: "/history", label: "History", icon: <BarChart className="w-4 h-4" /> },
                 ].map((item) => (
-                  <Link key={item.href} href={item.href}>
+                  <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}>
                     <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/40 hover:bg-muted/70 transition-colors">
                       <span className="text-primary">{item.icon}</span>
                       <span className="text-xs font-medium text-foreground">
@@ -258,12 +280,12 @@ export function Navbar() {
             </div>
           ) : (
             <div className="space-y-2 pt-1">
-              <Link href="/login" className="block">
+              <Link href="/login" className="block" onClick={(e) => handleNavClick(e, "/login")}>
                 <Button variant="outline" className="w-full rounded-xl">
                   Login
                 </Button>
               </Link>
-              <Link href="/register" className="block">
+              <Link href="/register" className="block" onClick={(e) => handleNavClick(e, "/register")}>
                 <Button className="w-full rounded-xl bg-primary hover:opacity-90 text-white font-semibold">
                   Get Started Free →
                 </Button>
