@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Target, BarChart, Sparkles, Search, Puzzle, Settings, TrendingUp } from "lucide-react";
+import { Zap, Target, BarChart, Sparkles, Search, Puzzle, Settings, TrendingUp, Building2 } from "lucide-react";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -65,6 +65,7 @@ export function Navbar() {
         { href: "/practice", label: "Practice", icon: <Target className="w-4 h-4" /> },
         { href: "/history", label: "My Sessions", icon: <BarChart className="w-4 h-4" /> },
         { href: "/placement", label: "Placement", icon: <TrendingUp className="w-4 h-4" /> },
+        { href: "/recruiter", label: "Recruiter Sim", icon: <Building2 className="w-4 h-4" /> },
         { href: "/settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
       ]
     : [

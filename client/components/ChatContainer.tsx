@@ -76,7 +76,7 @@ const ChatContainer = ({ messages, isLoading }: ChatContainerProps) => {
                 {message.isUser ? (
                   <p className="whitespace-pre-wrap">{message.content}</p>
                 ) : (
-                  <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-muted/50 prose-pre:border prose-pre:border-border/50">
+                  <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-muted/50 prose-pre:text-foreground prose-pre:border prose-pre:border-border/50">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {message.content}
                     </ReactMarkdown>
