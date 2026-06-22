@@ -232,6 +232,12 @@ You MUST respond in JSON format with these exact keys:
         maxPossibleWeightedScore += 100 * weight;
       });
       
+      // Penalize for questions that were not asked/answered due to early exit
+      const unaskedQuestions = interview.totalQuestions - interview.questionScores.length;
+      if (unaskedQuestions > 0) {
+        maxPossibleWeightedScore += (100 * difficultyWeights["medium"]) * unaskedQuestions;
+      }
+      
       const finalScore = maxPossibleWeightedScore > 0 ? Math.round((totalWeightedScore / maxPossibleWeightedScore) * 100) : 0;
 
       interview.score = finalScore;

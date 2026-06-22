@@ -222,7 +222,7 @@ const InterviewContent = () => {
         if (data.difficulty) setCurrentDifficulty(data.difficulty);
 
         if (data.isComplete || (data.questionsAnswered !== undefined && data.questionsAnswered >= TOTAL_QUESTIONS)) {
-          setInterviewScore(data.score || 75);
+          setInterviewScore(data.score ?? 75);
           setIsInterviewComplete(true);
           if (data.progressionReport) setProgressionReport(data.progressionReport);
           sessionStorage.removeItem("activeInterviewSessionId");
