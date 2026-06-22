@@ -221,25 +221,21 @@ You MUST respond in JSON format with these exact keys:
 
     // ── Complete path ──────────────────────────────────────
     if (isComplete) {
-      // Calculate weighted score
-      let totalWeightedScore = 0;
-      let maxPossibleWeightedScore = 0;
+      // Calculate proper adaptive score based on difficulty ceilings
+      // Easy max: 60, Medium max: 80, Hard max: 100
+      let totalPoints = 0;
       
-      const difficultyWeights = { easy: 1, medium: 1.5, hard: 2 };
+      const difficultyMaxPoints = { easy: 60, medium: 80, hard: 100 };
       
       interview.questionScores.forEach(qs => {
-        const weight = difficultyWeights[qs.difficulty] || 1;
-        totalWeightedScore += (qs.score * 10) * weight; // convert 0-10 to 0-100
-        maxPossibleWeightedScore += 100 * weight;
+        const maxPoints = difficultyMaxPoints[qs.difficulty] || 60;
+        const normalizedScore = qs.score / 10; // 0.0 to 1.0
+        totalPoints += (normalizedScore * maxPoints);
       });
       
-      // Penalize for questions that were not asked/answered due to early exit
-      const unaskedQuestions = interview.totalQuestions - interview.questionScores.length;
-      if (unaskedQuestions > 0) {
-        maxPossibleWeightedScore += (100 * difficultyWeights["medium"]) * unaskedQuestions;
-      }
-      
-      const finalScore = maxPossibleWeightedScore > 0 ? Math.round((totalWeightedScore / maxPossibleWeightedScore) * 100) : 0;
+      // Final score is the average of points across ALL 5 expected questions.
+      // Unasked questions (early exit) naturally contribute 0 points to the sum, penalizing the average.
+      const finalScore = Math.round(totalPoints / interview.totalQuestions);
 
       interview.score = finalScore;
       interview.isComplete = true;

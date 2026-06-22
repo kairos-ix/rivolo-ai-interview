@@ -19,6 +19,8 @@ import {
   ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar 
 } from "recharts";
 import { Modal } from "@/components/ui/modal";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Interview {
   id: string;
@@ -822,7 +824,15 @@ const DashboardPage = () => {
                                   </span>
                                 </div>
                               )}
-                              {msg.content}
+                              {msg.role === "ai" ? (
+                                <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-muted/50 prose-pre:border prose-pre:border-border/50">
+                                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {msg.content}
+                                  </ReactMarkdown>
+                                </div>
+                              ) : (
+                                <p className="whitespace-pre-wrap">{msg.content}</p>
+                              )}
                             </div>
                           </div>
                         ))}
