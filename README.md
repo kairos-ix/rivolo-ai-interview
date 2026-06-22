@@ -19,12 +19,14 @@
 
 ### 🎙️ AI-Powered Adaptive Mock Interviews
 - Choose from **11+ technical domains** — JavaScript, React, Python, System Design, Cybersecurity, and more.
-- **Adaptive Interview Engine**: Rivolo dynamically adjusts the difficulty of questions (Easy → Medium → Hard) based on your real-time performance. Answer strongly, and the engine dives deeper into advanced concepts. Struggle, and it gracefully scales down to foundational topics.
-- **Contextual Follow-ups**: The AI maintains full interview context, ensuring that subsequent questions logically follow your previous answers rather than just picking random questions from a database.
-- **Anti-Abuse Mechanisms**: Includes advanced hashing algorithms to detect repeated lazy answers (with score penalties) and ensures the AI never asks duplicate questions during a session.
-- **Robust Scoring System**: Scores are calculated using a weighted difficulty algorithm (Easy maxes out at 60 points, Hard maxes out at 100). Early exits penalize your score naturally.
-- **Markdown Rich Feedback**: After every answer, receive beautifully formatted, detailed explanations with code snippets and real-world examples to help you prepare.
-- **Adaptive Progression Report**: Upon finishing, get a timeline of your interview showing your Start Level, Peak Level, End Level, and a summary of your trajectory.
+- **Adaptive Interview Engine**: Rivolo dynamically adjusts the difficulty of questions (Easy → Medium → Hard) based on your real-time performance. Answer strongly (score >= 7), and the engine dives deeper into advanced concepts. Struggle (score < 5), and it gracefully scales down to foundational topics to help you recover.
+- **Contextual Follow-ups**: The AI maintains full interview context. The engine parses your previous performance and the exact topic of the last question, forcing the LLM to generate logical follow-up questions rather than picking random topics.
+- **Anti-Abuse Mechanisms (Hashing)**: 
+  - *Repeated Answer Detection*: Answers are hashed and stored. If you try to paste the exact same text again, the AI detects it, issues a warning in the chat, and slaps a 3-point penalty on your answer.
+  - *Duplicate Question Prevention*: All AI-generated questions are normalized, hashed, and tracked. The engine checks every newly generated question against the history to guarantee it is 100% unique, forcing the LLM to regenerate up to 3 times if it creates a duplicate.
+- **Robust Scoring System**: Scores are calculated using a weighted difficulty algorithm where questions have absolute caps (Easy maxes out at 60 points, Medium at 80, Hard at 100). The final score averages points across the expected 5 questions. Skipping questions or early exits penalize your score naturally by contributing 0 points.
+- **Markdown Rich Feedback**: After every answer, receive beautifully formatted, detailed explanations powered by `react-markdown` and `@tailwindcss/typography`, complete with code snippets, bolding, and real-world examples to help you prepare.
+- **Adaptive Progression Report**: Upon finishing, get a timeline of your interview plotted on your Dashboard showing your Start Level, Peak Level, End Level, and a summarized trajectory of your performance.
 
 ### 📄 Resume Analysis
 - Upload your PDF resume and get an **AI-powered analysis** with domain-specific recommendations.
@@ -50,10 +52,10 @@
 
 | Layer | Technology |
 |---|---|
-| **Frontend** | Next.js 16, React, TypeScript, Tailwind CSS, shadcn/ui, Framer Motion |
+| **Frontend** | Next.js 16, React, TypeScript, Tailwind CSS, shadcn/ui, Framer Motion, react-markdown |
 | **Backend** | Node.js, Express 5, Mongoose |
 | **Database** | MongoDB Atlas |
-| **AI Engine** | Groq API (LLaMA models) |
+| **AI Engine** | Groq API (LLaMA-3.3-70b-versatile) |
 | **Security** | Helmet, express-rate-limit, express-mongo-sanitize, hpp, bcryptjs, JWT |
 | **Email** | Nodemailer (Ethereal for dev, configurable for production SMTP) |
 
