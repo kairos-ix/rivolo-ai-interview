@@ -316,7 +316,7 @@ export default function RecruiterInterviewPage() {
 
               <div className="text-left bg-muted/30 rounded-2xl p-6 border border-border/50">
                 <h3 className="text-lg font-bold text-foreground mb-4 border-b border-border/50 pb-2">Hiring Committee Feedback</h3>
-                <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground">
+                <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground prose-pre:bg-muted/50 prose-pre:text-foreground prose-pre:border prose-pre:border-border/50">
                   <ReactMarkdown>{session.companyFeedback || ""}</ReactMarkdown>
                 </div>
               </div>
