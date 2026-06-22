@@ -4,7 +4,7 @@
 
 **An intelligent, full-stack web application that conducts realistic mock interviews powered by AI, analyzes your resume, and provides actionable feedback to help you land your dream job.**
 
-**Live Demo:** [https://sahilmauryadev.com](https://sahilmauryadev.com)
+**Live Demo:** [https://rivolo-ai-interview.vercel.app/](https://rivolo-ai-interview.vercel.app/)
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![Express.js](https://img.shields.io/badge/Express-5-000000?style=for-the-badge&logo=express)](https://expressjs.com/)
