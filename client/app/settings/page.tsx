@@ -1,0 +1,420 @@
+"use client";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { Check, X, Shield, Trash2, Eye, EyeOff } from "lucide-react";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+
+const passwordChecks = [
+  { label: "At least 8 characters", test: (pw: string) => pw.length >= 8 },
+  { label: "Uppercase & lowercase letters", test: (pw: string) => /[a-z]/.test(pw) && /[A-Z]/.test(pw) },
+  { label: "At least one number", test: (pw: string) => /\d/.test(pw) },
+  { label: "At least one special character", test: (pw: string) => /[@$!%*?&]/.test(pw) },
+];
+
+export default function SettingsPage() {
+  const { user, isLoggedIn, isLoading, changePassword, deleteAccount, logout, sendActionOTP, updateName } = useAuth();
+  const router = useRouter();
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!isLoading && !isLoggedIn) {
+      router.push("/login");
+    }
+  }, [isLoading, isLoggedIn, router]);
+
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newName, setNewName] = useState(user?.name || "");
+  const [nameLoading, setNameLoading] = useState(false);
+
+  // ── Change Password State ──
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [pwSuccess, setPwSuccess] = useState("");
+  const [pwError, setPwError] = useState("");
+  const [pwLoading, setPwLoading] = useState(false);
+  const [passwordOtp, setPasswordOtp] = useState("");
+  const [isPasswordOtpSent, setIsPasswordOtpSent] = useState(false);
+
+  // ── Delete Account State ──
+  const [deletePassword, setDeletePassword] = useState("");
+  const [showDeletePw, setShowDeletePw] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteOtp, setDeleteOtp] = useState("");
+  const [isDeleteOtpSent, setIsDeleteOtpSent] = useState(false);
+
+  const handleUpdateName = async () => {
+    if (!newName || newName.trim() === user?.name) {
+      setIsEditingName(false);
+      return;
+    }
+    setNameLoading(true);
+    try {
+      await updateName(newName);
+      setIsEditingName(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setNameLoading(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwError("");
+    setPwSuccess("");
+
+    if (!passwordChecks.every((c) => c.test(newPassword))) {
+      setPwError("Please meet all password requirements.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPwError("New passwords do not match.");
+      return;
+    }
+    if (currentPassword === newPassword) {
+      setPwError("New password must be different from your current password.");
+      return;
+    }
+
+    setPwLoading(true);
+    try {
+      if (!isPasswordOtpSent) {
+        await sendActionOTP();
+        setIsPasswordOtpSent(true);
+        setPwSuccess("Authorization code sent to your email.");
+      } else {
+        if (!passwordOtp) {
+          setPwError("Please enter the authorization code.");
+          setPwLoading(false);
+          return;
+        }
+        await changePassword(currentPassword, newPassword, passwordOtp);
+        setPwSuccess("Password updated successfully!");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setPasswordOtp("");
+        setIsPasswordOtpSent(false);
+      }
+    } catch (err: any) {
+      setPwError(err?.response?.data?.message || "Failed to process request.");
+    } finally {
+      setPwLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleteError("");
+    setDeleteLoading(true);
+    try {
+      if (!isDeleteOtpSent) {
+        await sendActionOTP();
+        setIsDeleteOtpSent(true);
+      } else {
+        if (!deleteOtp) {
+          setDeleteError("Please enter the authorization code.");
+          setDeleteLoading(false);
+          return;
+        }
+        await deleteAccount(deletePassword, deleteOtp);
+        // deleteAccount in context already clears auth and redirects
+      }
+    } catch (err: any) {
+      setDeleteError(err?.response?.data?.message || "Failed to process request.");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  if (isLoading || !isLoggedIn) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 bg-background py-8 md:py-12 px-4">
+      <div className="max-w-xl mx-auto space-y-8">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Account Settings</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage your account security and preferences
+          </p>
+        </div>
+
+        {/* Profile Info */}
+        <Card className="p-6 border border-border/50">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Profile</h2>
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+              <span className="text-sm text-muted-foreground w-24">Name</span>
+              {isEditingName ? (
+                <div className="flex items-center gap-2 flex-1">
+                  <Input 
+                    value={newName} 
+                    onChange={(e) => setNewName(e.target.value)} 
+                    className="h-8"
+                    placeholder="Your name"
+                    autoFocus
+                  />
+                  <Button size="sm" onClick={handleUpdateName} disabled={nameLoading} className="h-8 rounded-md bg-primary text-white">Save</Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setIsEditingName(false); setNewName(user?.name || ""); }} className="h-8 rounded-md">Cancel</Button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between flex-1">
+                  <span className="text-sm font-medium text-foreground">{user?.name}</span>
+                  <Button size="sm" variant="ghost" onClick={() => { setIsEditingName(true); setNewName(user?.name || ""); }} className="h-8 text-xs px-2 text-primary">Edit</Button>
+                </div>
+              )}
+            </div>
+            <div className="h-px bg-border/50" />
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+              <span className="text-sm text-muted-foreground w-24">Email</span>
+              <span className="text-sm font-medium text-foreground flex-1">{user?.email}</span>
+            </div>
+          </div>
+        </Card>
+
+        {/* Change Password */}
+        <Card className="p-6 border border-border/50">
+          <div className="flex items-center gap-2 mb-6">
+            <Shield className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold text-foreground">Change Password</h2>
+          </div>
+
+          {pwSuccess && (
+            <div className="mb-4 p-3 bg-green-500/10 text-green-600 dark:text-green-400 rounded-lg text-sm border border-green-500/20">
+              {pwSuccess}
+            </div>
+          )}
+          {pwError && (
+            <div className="mb-4 p-3 bg-destructive/10 text-destructive rounded-lg text-sm border border-destructive/20">
+              {pwError}
+            </div>
+          )}
+
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-sm font-medium text-foreground">
+                  Current Password
+                </label>
+                <Link href="/forgot-password" className="text-xs text-primary hover:underline">
+                  Forgot Password?
+                </Link>
+              </div>
+              <div className="relative">
+                <Input
+                  type={showCurrentPw ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password"
+                  required
+                  className="rounded-lg pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPw(!showCurrentPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">
+                New Password
+              </label>
+              <div className="relative">
+                <Input
+                  type={showNewPw ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password"
+                  required
+                  className="rounded-lg pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPw(!showNewPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {newPassword && (
+                <div className="mt-3 space-y-1.5">
+                  {passwordChecks.map((check, idx) => {
+                    const pass = check.test(newPassword);
+                    return (
+                      <div key={idx} className={`flex items-center text-xs ${pass ? "text-green-500" : "text-muted-foreground"}`}>
+                        {pass ? <Check className="w-3.5 h-3.5 mr-1.5" /> : <X className="w-3.5 h-3.5 mr-1.5 opacity-50" />}
+                        {check.label}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">
+                Confirm New Password
+              </label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+                required
+                className="rounded-lg"
+              />
+              {confirmPassword && newPassword !== confirmPassword && (
+                <p className="text-xs text-destructive mt-1.5">Passwords do not match</p>
+              )}
+            </div>
+
+            <AnimatePresence>
+              {isPasswordOtpSent && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <label className="block text-sm font-medium text-foreground mb-1.5 mt-2">
+                    Authorization Code (OTP)
+                  </label>
+                  <Input
+                    type="text"
+                    value={passwordOtp}
+                    onChange={(e) => setPasswordOtp(e.target.value)}
+                    placeholder="Enter 6-digit code"
+                    required
+                    className="rounded-lg tracking-widest text-center text-lg"
+                    maxLength={6}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    We've sent a code to your email. It expires in 5 minutes.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <Button
+              type="submit"
+              disabled={pwLoading}
+              className="w-full rounded-full bg-primary hover:opacity-90 text-white font-semibold mt-2"
+            >
+              {pwLoading ? "Processing..." : isPasswordOtpSent ? "Confirm & Update Password" : "Update Password"}
+            </Button>
+          </form>
+        </Card>
+
+        {/* Danger Zone */}
+        <Card className="p-6 border border-destructive/30 bg-destructive/5">
+          <div className="flex items-center gap-2 mb-2">
+            <Trash2 className="w-5 h-5 text-destructive" />
+            <h2 className="text-lg font-semibold text-destructive">Danger Zone</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Permanently delete your account and all associated data including interview history.
+            This action cannot be undone.
+          </p>
+          <Button
+            variant="destructive"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="rounded-full font-semibold"
+          >
+            Delete My Account
+          </Button>
+        </Card>
+      </div>
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title="Delete Account"
+        description="This will permanently delete your account and all interview data. Enter your password to confirm."
+        isDanger={true}
+        onConfirm={handleDeleteAccount}
+        onCancel={() => {
+          setShowDeleteConfirm(false);
+          setDeletePassword("");
+          setDeleteError("");
+          setDeleteOtp("");
+          setIsDeleteOtpSent(false);
+        }}
+        isLoading={deleteLoading}
+        confirmText={isDeleteOtpSent ? "Confirm Deletion" : "Send Verification Code"}
+      >
+        {deleteError && (
+          <div className="mb-4 p-3 bg-destructive/10 text-destructive rounded-lg text-sm border border-destructive/20">
+            {deleteError}
+          </div>
+        )}
+        <div className="relative mb-4">
+          <label className="block text-sm font-medium text-foreground mb-1.5">
+            Current Password
+          </label>
+          <Input
+            type={showDeletePw ? "text" : "password"}
+            value={deletePassword}
+            onChange={(e) => setDeletePassword(e.target.value)}
+            placeholder="Enter your password"
+            className="rounded-lg pr-10"
+            disabled={isDeleteOtpSent}
+          />
+          <button
+            type="button"
+            onClick={() => setShowDeletePw(!showDeletePw)}
+            className="absolute right-3 top-[38px] -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            disabled={isDeleteOtpSent}
+          >
+            {showDeletePw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+
+        <AnimatePresence>
+          {isDeleteOtpSent && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <label className="block text-sm font-medium text-foreground mb-1.5">
+                Authorization Code (OTP)
+              </label>
+              <Input
+                type="text"
+                value={deleteOtp}
+                onChange={(e) => setDeleteOtp(e.target.value)}
+                placeholder="Enter 6-digit code"
+                className="rounded-lg tracking-widest text-center text-lg"
+                maxLength={6}
+              />
+              <p className="text-xs text-muted-foreground mt-1.5">
+                We've sent a code to your email. It expires in 5 minutes.
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </ConfirmModal>
+    </div>
+  );
+}
