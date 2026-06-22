@@ -287,13 +287,16 @@ You MUST respond in JSON format with these exact keys:
               {
                 role: "user",
                 content: `The candidate's current difficulty level is ${nextDifficulty.toUpperCase()}.
-The question should:
+Their performance on the last question was: ${scoreAwarded >= 7 ? "STRONG" : scoreAwarded < 5 ? "WEAK/SKIPPED" : "AVERAGE"}.
+Last Question Asked: "${currentQuestion}"
+
+The new question should:
 - Be highly relevant to ${domain}
+- Act as a logical follow-up to the last question. If they were STRONG, dive deeper into related advanced concepts. If they were WEAK, test easier foundational concepts related to the topic.
 - Be a completely NEW question, different from previous ones
 - Be appropriate for a ${nextDifficulty.toUpperCase()} level
-- Test deeper understanding if medium/hard, or fundamental concepts if easy.
 
-Previous questions already asked:
+Previous questions already asked (DO NOT REPEAT):
 - ${previousQuestions}
 
 Return ONLY the new question, nothing else.`,
