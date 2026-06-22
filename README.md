@@ -17,10 +17,14 @@
 
 ## ✨ Features
 
-### 🎙️ AI-Powered Mock Interviews
+### 🎙️ AI-Powered Adaptive Mock Interviews
 - Choose from **11+ technical domains** — JavaScript, React, Python, System Design, Cybersecurity, and more.
-- Rivolo, the AI interviewer, asks one question at a time and evaluates your answer with a **score, strengths, and areas for improvement**.
-- Adaptive questioning that generates unique, non-repeating questions for each session.
+- **Adaptive Interview Engine**: Rivolo dynamically adjusts the difficulty of questions (Easy → Medium → Hard) based on your real-time performance. Answer strongly, and the engine dives deeper into advanced concepts. Struggle, and it gracefully scales down to foundational topics.
+- **Contextual Follow-ups**: The AI maintains full interview context, ensuring that subsequent questions logically follow your previous answers rather than just picking random questions from a database.
+- **Anti-Abuse Mechanisms**: Includes advanced hashing algorithms to detect repeated lazy answers (with score penalties) and ensures the AI never asks duplicate questions during a session.
+- **Robust Scoring System**: Scores are calculated using a weighted difficulty algorithm (Easy maxes out at 60 points, Hard maxes out at 100). Early exits penalize your score naturally.
+- **Markdown Rich Feedback**: After every answer, receive beautifully formatted, detailed explanations with code snippets and real-world examples to help you prepare.
+- **Adaptive Progression Report**: Upon finishing, get a timeline of your interview showing your Start Level, Peak Level, End Level, and a summary of your trajectory.
 
 ### 📄 Resume Analysis
 - Upload your PDF resume and get an **AI-powered analysis** with domain-specific recommendations.
@@ -127,10 +131,10 @@ rivolo-ai-interview/
 │   └── src/
 │       ├── config/           # Database connection
 │       ├── controllers/      # Route handlers (auth, interview, resume)
-│       ├── middleware/        # JWT auth middleware
+│       ├── middleware/       # JWT auth middleware
 │       ├── models/           # Mongoose schemas (User, Interview)
 │       ├── routes/           # API route definitions
-│       └── utils/            # Retry logic & helpers
+│       └── utils/            # Adaptive Engine, hashing, and Groq retry logic
 │
 └── README.md
 ```
