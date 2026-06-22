@@ -70,6 +70,7 @@ export default function PlacementPage() {
   const [candidateType, setCandidateType] = useState("fresher");
   const [savingConfig, setSavingConfig] = useState(false);
   const [configError, setConfigError] = useState("");
+  const [generateError, setGenerateError] = useState("");
 
   // Scoring config local state
   const [iw, setIw] = useState(50);
@@ -105,6 +106,7 @@ export default function PlacementPage() {
   const handleGenerate = async (type?: string) => {
     try {
       setGenerating(true);
+      setGenerateError("");
       const { data: res } = await axiosInstance.post("/api/placement/generate", {
         candidateType: type || candidateType,
       });
@@ -114,7 +116,7 @@ export default function PlacementPage() {
       setRw(res.scoringConfig?.resumeWeight ?? 30);
       setSw(res.scoringConfig?.skillBreadthWeight ?? 20);
     } catch (err: any) {
-      console.error("Generate failed:", err?.response?.data?.message || err.message);
+      setGenerateError(err?.response?.data?.message || err.message || "Failed to analyze readiness.");
     } finally {
       setGenerating(false);
     }
@@ -203,6 +205,31 @@ export default function PlacementPage() {
             ))}
           </div>
 
+          {generateError && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full bg-destructive/10 text-destructive p-4 rounded-xl text-sm border border-destructive/20"
+            >
+              <div className="flex items-start gap-3 text-left">
+                <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold mb-1">Analysis Failed</p>
+                  <p className="text-destructive/80 mb-3">{generateError}</p>
+                  {generateError.includes("No completed interviews") && (
+                    <Button 
+                      onClick={() => router.push("/practice")}
+                      size="sm" 
+                      className="bg-destructive hover:bg-destructive/90 text-white"
+                    >
+                      Start an Interview
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           <Button
             onClick={() => handleGenerate()}
             disabled={generating}
@@ -285,6 +312,13 @@ export default function PlacementPage() {
             </Button>
           </div>
         </motion.div>
+
+        {generateError && (
+          <div className="bg-destructive/10 text-destructive p-4 rounded-xl text-sm border border-destructive/20 flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 shrink-0" />
+            <p>{generateError}</p>
+          </div>
+        )}
 
         {/* ── Generating overlay ──────────────────────────── */}
         <AnimatePresence>
