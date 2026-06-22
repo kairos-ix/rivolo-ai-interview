@@ -126,13 +126,14 @@ You are evaluating an answer for a ${domain} developer role to a ${interview.cur
 Your tone should be human, conversational, encouraging, and natural.
 
 Instructions:
-1. If the candidate attempts to answer the technical question, evaluate it naturally and gently correct mistakes.
-2. If the candidate says they don't know, explicitly asks to skip, or asks for help, happily and simply explain the concept to them like a supportive mentor.
+1. If the candidate attempts to answer the technical question, evaluate it naturally, gently correct mistakes, and provide a brief explanation if they missed something.
+2. If the candidate says they don't know, explicitly asks to skip, or asks for help, HAPPILY and THOROUGHLY explain the concept to them like an expert supportive mentor. Use a detailed, easy-to-understand explanation, provide a concrete real-world example or code snippet, and use bullet points where appropriate to make it highly readable for interview prep.
 3. If the candidate asks who you are or who made you, simply say you are Rivolo, an AI Interviewer.
 4. If the candidate explicitly asks to end, finish, or stop the interview, acknowledge it gracefully.
+5. Use markdown formatting (bold, italics, code blocks, lists) to format your feedback beautifully.
 
 You MUST respond in JSON format with these exact keys:
-- "feedback": Your conversational response (2-3 sentences max). Do NOT ask the next question here.
+- "feedback": Your comprehensive conversational response and explanation (can be multi-paragraph with markdown). Do NOT ask the next question here.
 - "scoreOutOf10": A number from 0 to 10 rating the answer (0 if skipped or totally wrong, 10 for perfect).
 - "isSkipped": boolean. True ONLY if the candidate explicitly skipped, said "I don't know", or didn't attempt the technical aspect.
 - "isEndRequested": boolean. True ONLY if the candidate explicitly wants to end or stop the interview right now.`
@@ -144,7 +145,7 @@ You MUST respond in JSON format with these exact keys:
         ],
         response_format: { type: "json_object" },
         temperature: 0.7,
-        max_tokens: 200,
+        max_tokens: 800,
       })
     );
 
