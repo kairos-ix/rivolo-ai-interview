@@ -27,8 +27,8 @@ export default function Footer() {
         <div className="flex items-center gap-2">
           <p className="text-sm text-muted-foreground font-medium">
             Made with <span className="text-red-500 animate-pulse inline-block">❤️</span> by{" "}
-            <Link target='_blank' rel="noopener noreferrer" href="https://kairos.sahilmauryadev.com/" className="hover:text-foreground hover:underline font-medium transition-colors"><span className="text-foreground font-semibold">Sahil Maurya</span>{" "}
-            <span className="text-xs opacity-70">(also known as kairos)</span></Link>
+            <a target='_blank' rel="noopener noreferrer" href="https://kairos.sahilmauryadev.com/" className="hover:text-foreground hover:underline font-medium transition-colors"><span className="text-foreground font-semibold">Sahil Maurya</span>{" "}
+            <span className="text-xs opacity-70">(also known as kairos)</span></a>
           </p>
         </div>
 
