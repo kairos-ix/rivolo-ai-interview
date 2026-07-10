@@ -5,7 +5,7 @@ const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
 const mongoSanitize = require("express-mongo-sanitize");
-const xss = require("xss-clean");
+const xss = require("xss");
 const hpp = require("hpp");
 const connectDB = require("./config/db.js");
 const authRoutes = require("./routes/auth.js");
@@ -68,8 +68,26 @@ app.use((req, res, next) => {
   next();
 });
 
-// XSS sanitization - clean user input
-app.use(xss());
+// XSS sanitization - clean user input (xss-clean is incompatible with Express 5
+// because it reassigns req.query which is now a read-only getter. Instead we use
+// the 'xss' package and mutate objects in-place.)
+function sanitizeValue(value) {
+  if (typeof value === "string") return xss(value);
+  if (Array.isArray(value)) return value.map(sanitizeValue);
+  if (value !== null && typeof value === "object") {
+    Object.keys(value).forEach((k) => { value[k] = sanitizeValue(value[k]); });
+  }
+  return value;
+}
+app.use((req, res, next) => {
+  if (req.body) req.body = sanitizeValue(req.body);
+  if (req.params) req.params = sanitizeValue(req.params);
+  // req.query is read-only in Express 5 — mutate its keys in-place
+  if (req.query) {
+    Object.keys(req.query).forEach((k) => { req.query[k] = sanitizeValue(req.query[k]); });
+  }
+  next();
+});
 
 // Protect against HTTP Parameter Pollution attacks
 app.use(hpp({
