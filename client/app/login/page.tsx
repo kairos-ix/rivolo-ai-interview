@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { Modal } from "@/components/ui/modal";
+
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -38,7 +38,7 @@ const LoginPage = () => {
 
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showForgotModal, setShowForgotModal] = useState(false);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const newData = { ...formData, [name]: value };
@@ -108,13 +108,12 @@ const LoginPage = () => {
                 >
                   Password
                 </label>
-                <button
-                  type="button"
-                  onClick={() => setShowForgotModal(true)}
+                <Link
+                  href="/forgot-password"
                   className="text-xs font-semibold text-primary hover:underline"
                 >
                   Forgot password?
-                </button>
+                </Link>
               </div>
               <div className="relative">
                 <Input
@@ -159,18 +158,7 @@ const LoginPage = () => {
           </div>
         </Card>
 
-        <Modal
-          isOpen={showForgotModal}
-          onClose={() => setShowForgotModal(false)}
-          title="Password Reset Unavailable"
-          description="The automated password reset feature is currently under development. If you need immediate assistance regaining access to your account, please contact our support team."
-        >
-          <div className="flex justify-end">
-            <Button onClick={() => setShowForgotModal(false)} className="rounded-full">
-              OK
-            </Button>
-          </div>
-        </Modal>
+
       </div>
     </div>
   );

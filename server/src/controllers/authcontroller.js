@@ -189,32 +189,29 @@ const forgotPassword = async (req, res) => {
     const { email } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(200).json({ message: "If an account with that email exists, a password reset link has been sent." });
+      return res.status(200).json({ message: "If an account with that email exists, a verification code has been sent." });
     }
 
-    const resetToken = crypto.randomBytes(20).toString("hex");
-    const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOTP = crypto.createHash("sha256").update(otp).digest("hex");
     
-    user.resetPasswordToken = hashedToken;
-    user.resetPasswordExpires = Date.now() + 3600000;
+    user.resetPasswordToken = hashedOTP;
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 mins
     await user.save();
 
-    const clientUrl = process.env.CLIENT_URL || req.headers.origin || "http://localhost:3000";
-    const resetUrl = `${clientUrl}/reset-password?token=${resetToken}`;
-    
     const { error } = await resend.emails.send({
       from: 'noreply@sahilmauryadev.com',
       to: user.email,
-      subject: "Password Reset Request",
-      text: `You requested a password reset. Please click the following link, or paste it into your browser to complete the process:\n\n${resetUrl}\n\nIf you did not request this, please ignore this email and your password will remain unchanged.`,
+      subject: "Password Reset Code",
+      text: `Your password reset code is ${otp}. It will expire in 15 minutes.`,
       html: `
         <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; border: 1px solid #e5e7eb; border-radius: 12px;">
-          <h2 style="color: #111827; margin-top: 0;">Password Reset Request</h2>
-          <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">You requested a password reset. Please click the button below to complete the process:</p>
-          <div style="margin: 32px 0; text-align: center;">
-            <a href="${resetUrl}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Reset Password</a>
+          <h2 style="color: #111827; margin-top: 0;">Password Reset Code</h2>
+          <p style="color: #4b5563; font-size: 16px; line-height: 1.5;">You requested a password reset. Here is your verification code:</p>
+          <div style="background-color: #f3f4f6; padding: 16px 24px; border-radius: 8px; margin: 24px 0; text-align: center;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #2563eb;">${otp}</span>
           </div>
-          <p style="color: #4b5563; font-size: 14px;">If you did not request this, please ignore this email.</p>
+          <p style="color: #4b5563; font-size: 14px;">This code will expire in 15 minutes. If you did not request this, please ignore this email.</p>
           <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb; color: #4b5563; font-size: 14px;">
             Best regards,<br/>
             <strong style="color: #111827; font-size: 16px;">Sahil (Kairos)</strong><br/>
@@ -229,7 +226,7 @@ const forgotPassword = async (req, res) => {
     }
     
     res.status(200).json({ 
-      message: "If an account with that email exists, a password reset link has been sent."
+      message: "If an account with that email exists, a verification code has been sent."
     });
   } catch (err) {
     res.status(500).json({ message: "Error sending email", error: err.message });
@@ -238,23 +235,27 @@ const forgotPassword = async (req, res) => {
 
 const resetPassword = async (req, res) => {
   try {
-    const { token } = req.params;
-    const { password } = req.body;
+    const { email, otp, password } = req.body;
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!password || !passwordRegex.test(password)) {
       return res.status(400).json({ message: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character." });
     }
+    
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required" });
+    }
 
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const hashedOTP = crypto.createHash("sha256").update(otp).digest("hex");
 
     const user = await User.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpires: { $gt: Date.now() }
+      email,
+      resetPasswordToken: hashedOTP,
+      resetPasswordExpires: { $gt: Date.now() },
     });
 
     if (!user) {
-      return res.status(400).json({ message: "Password reset token is invalid or has expired." });
+      return res.status(400).json({ message: "OTP is invalid or has expired" });
     }
 
     user.password = password;
@@ -262,9 +263,9 @@ const resetPassword = async (req, res) => {
     user.resetPasswordExpires = undefined;
     await user.save();
 
-    res.status(200).json({ message: "Password has been successfully reset. You can now log in." });
+    res.status(200).json({ message: "Password successfully reset" });
   } catch (err) {
-    res.status(500).json({ message: "Error resetting password", error: err.message });
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 

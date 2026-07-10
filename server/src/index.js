@@ -11,9 +11,15 @@ const interviewRoutes = require("./routes/interview.js");
 const resumeRoutes = require("./routes/resume.js");
 const placementRoutes = require("./routes/placementRoutes.js");
 const recruiterRoutes = require("./routes/recruiterRoutes.js");
+const arenaRoutes = require("./routes/arenaRoutes.js");
+const { generateChallenges } = require("./controllers/arenaController.js");
 
 
-connectDB();
+connectDB().then(() => {
+  // Auto-generate arena challenges after DB is ready
+  generateChallenges();
+});
+
 const app = express();
 
 // Allow both localhost (dev) and production (Vercel) origins
@@ -120,6 +126,7 @@ app.use("/api/interviews", aiLimiter, interviewRoutes);
 app.use("/api/resume", resumeLimiter, resumeRoutes);
 app.use("/api/placement", aiLimiter, placementRoutes);
 app.use("/api/recruiter", aiLimiter, recruiterRoutes);
+app.use("/api/arena", generalLimiter, arenaRoutes);
 const PORT = process.env.PORT || 5000;
 
 app.get("/", (req, res) => {

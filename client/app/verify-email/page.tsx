@@ -103,6 +103,10 @@ export default function VerifyEmailPage() {
           <p className="text-muted-foreground text-sm max-w-[280px] mx-auto">
             We've sent a 6-digit verification code to <span className="font-semibold text-foreground">{email}</span>.
           </p>
+          <div className="mt-4 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-amber-600 dark:text-amber-400 text-xs font-medium flex items-center justify-center gap-2 max-w-[320px] mx-auto">
+            <span className="text-lg">⚠️</span>
+            Please check your spam or junk folder if you don't see it.
+          </div>
         </div>
 
         <Card className="p-6 border border-border/50 shadow-2xl bg-card/80 backdrop-blur-sm">

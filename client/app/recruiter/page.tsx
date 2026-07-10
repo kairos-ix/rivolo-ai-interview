@@ -172,7 +172,7 @@ const RecruiterSelectionPage = () => {
                   </span>
                 </div>
 
-                <p className="text-sm text-muted-foreground mb-6 line-clamp-2 leading-relaxed flex-grow">
+                <p className="text-sm text-muted-foreground mb-6 line-clamp-2 leading-relaxed">
                   {company.style}
                 </p>
 
@@ -190,7 +190,7 @@ const RecruiterSelectionPage = () => {
                   onClick={() => handleStart(company.id)}
                   disabled={!!loadingCompany}
                   className="w-full mt-auto rounded-xl font-semibold"
-                  variant={candidateType === "fresher" && company.difficulty === "hard" ? "secondary" : "default"}
+                  variant="default"
                 >
                   {loadingCompany === company.id ? (
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
