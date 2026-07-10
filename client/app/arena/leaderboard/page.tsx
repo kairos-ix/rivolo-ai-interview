@@ -102,7 +102,10 @@ function LeaderboardContent() {
     }
   }, [isLoggedIn, challengeId]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData();
+  }, [fetchData]);
 
   if (!isLoggedIn) return null;
 

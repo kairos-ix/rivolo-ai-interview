@@ -76,8 +76,8 @@ export default function ChallengePage() {
   const [newBadges, setNewBadges] = useState<any[]>([]);
   const [showBadgeToast, setShowBadgeToast] = useState(false);
 
-  // Timer
-  const startTimeRef = useRef(Date.now());
+  // Timer — use null initial value and set it lazily in useEffect to satisfy purity rules
+  const startTimeRef = useRef<number>(0);
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
@@ -85,6 +85,7 @@ export default function ChallengePage() {
   }, [isLoggedIn, router]);
 
   useEffect(() => {
+    startTimeRef.current = Date.now();
     const t = setInterval(() => setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000)), 1000);
     return () => clearInterval(t);
   }, []);

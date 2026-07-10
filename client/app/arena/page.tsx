@@ -109,7 +109,10 @@ const ArenaPage = () => {
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn) fetchChallenges();
+    if (isLoggedIn) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchChallenges();
+    }
   }, [isLoggedIn, fetchChallenges]);
 
   if (!isLoggedIn) return null;

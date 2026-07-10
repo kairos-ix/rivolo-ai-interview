@@ -77,14 +77,6 @@ export default function PlacementPage() {
   const [rw, setRw] = useState(30);
   const [sw, setSw] = useState(20);
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      router.push("/login");
-      return;
-    }
-    fetchReadiness();
-  }, [isLoggedIn]);
-
   const fetchReadiness = useCallback(async () => {
     try {
       setLoading(true);
@@ -102,6 +94,15 @@ export default function PlacementPage() {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.push("/login");
+      return;
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchReadiness();
+  }, [isLoggedIn, router, fetchReadiness]);
 
   const handleGenerate = async (type?: string) => {
     try {

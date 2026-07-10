@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "@/lib/axios";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,15 +14,7 @@ export default function RecruiterHistoryPage() {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      router.push("/login");
-      return;
-    }
-    fetchHistory();
-  }, [isLoggedIn, router]);
-
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     try {
       setLoading(true);
       const res = await axiosInstance.get("/api/recruiter/history");
@@ -32,7 +24,15 @@ export default function RecruiterHistoryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.push("/login");
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchHistory();
+  }, [isLoggedIn, router, fetchHistory]);
 
   if (!isLoggedIn) return null;
 

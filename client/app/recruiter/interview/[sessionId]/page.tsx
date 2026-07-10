@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import axiosInstance from "@/lib/axios";
@@ -39,15 +39,7 @@ export default function RecruiterInterviewPage() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      router.push("/login");
-      return;
-    }
-    fetchSession();
-  }, [isLoggedIn, sessionId]);
-
-  const fetchSession = async () => {
+  const fetchSession = useCallback(async () => {
     try {
       setLoading(true);
       const res = await axiosInstance.get(`/api/recruiter/session/${sessionId}`);
@@ -57,7 +49,16 @@ export default function RecruiterInterviewPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.push("/login");
+      return;
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchSession();
+  }, [isLoggedIn, sessionId, router, fetchSession]);
 
   useEffect(() => {
     if (scrollRef.current) {
