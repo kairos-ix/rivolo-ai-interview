@@ -12,6 +12,7 @@ const resumeRoutes = require("./routes/resume.js");
 const placementRoutes = require("./routes/placementRoutes.js");
 const recruiterRoutes = require("./routes/recruiterRoutes.js");
 const arenaRoutes = require("./routes/arenaRoutes.js");
+const adminRoutes = require("./routes/adminRoutes.js");
 const { generateChallenges } = require("./controllers/arenaController.js");
 
 
@@ -130,6 +131,8 @@ app.use("/api/resume", resumeLimiter, resumeRoutes);
 app.use("/api/placement", aiLimiter, placementRoutes);
 app.use("/api/recruiter", aiLimiter, recruiterRoutes);
 app.use("/api/arena", generalLimiter, arenaRoutes);
+app.use("/api/admin", generalLimiter, adminRoutes);
+app.use("/api/mentor", generalLimiter, require("./routes/mentorRoutes"));
 const PORT = process.env.PORT || 5000;
 
 app.get("/", (req, res) => {

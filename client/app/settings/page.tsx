@@ -245,6 +245,37 @@ export default function SettingsPage() {
               <span className="text-sm text-muted-foreground w-24">Email</span>
               <span className="text-sm font-medium text-foreground flex-1">{user?.email}</span>
             </div>
+            <div className="h-px bg-border/50" />
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+              <span className="text-sm text-muted-foreground w-24">Role</span>
+              <div className="flex-1">
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+                  user?.role === "admin"
+                    ? "bg-red-50 text-red-700 border-red-200"
+                    : user?.role === "mentor"
+                    ? "bg-purple-50 text-purple-700 border-purple-200"
+                    : "bg-blue-50 text-blue-700 border-blue-200"
+                }`}>
+                  <Shield className="w-3 h-3" />
+                  {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "Student"}
+                </span>
+              </div>
+            </div>
+            <div className="h-px bg-border/50" />
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+              <span className="text-sm text-muted-foreground w-24 pt-1">Permissions</span>
+              <div className="flex-1 flex flex-wrap gap-2">
+                {user?.permissions?.length ? (
+                  user.permissions.map((p: string) => (
+                    <span key={p} className="px-2 py-1 bg-muted/50 border border-border/50 text-foreground text-[10px] font-semibold rounded-md uppercase tracking-wider">
+                      {p.replace(/_/g, ' ')}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-muted-foreground pt-1">Standard Access</span>
+                )}
+              </div>
+            </div>
           </div>
         </Card>
 

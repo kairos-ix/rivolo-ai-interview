@@ -15,6 +15,15 @@ const userSchema = new mongoose.Schema({
     type: String, 
     required: [true, "Password is required"], 
   },
+  role: {
+    type: String,
+    enum: ['student', 'mentor', 'admin'],
+    default: 'student'
+  },
+  permissions: {
+    type: [String],
+    default: []
+  },
   createdAt: { type: Date, default: Date.now },
   isVerified: { type: Boolean, default: false },
   verificationOTP: String,
@@ -24,6 +33,11 @@ const userSchema = new mongoose.Schema({
   resetPasswordToken: String,
   resetPasswordExpires: Date,
   
+  // Admin: Account restriction
+  isRestricted: { type: Boolean, default: false },
+  restrictedAt: { type: Date, default: null },
+  restrictedReason: { type: String, default: null },
+
   // Security: Account lockout
   failedLoginAttempts: { type: Number, default: 0 },
   lockUntil: { type: Date, default: null },

@@ -83,7 +83,7 @@ const INTERVIEW_DOMAINS = [
 
 export default function PracticePage() {
   const router = useRouter();
-  const { isLoggedIn, isLoading: authLoading } = useAuth();
+  const { isLoggedIn, isLoading: authLoading, user } = useAuth();
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
 
   useEffect(() => {
@@ -103,8 +103,10 @@ export default function PracticePage() {
   useEffect(() => {
     if (!authLoading && !isLoggedIn) {
       router.push("/login");
+    } else if (!authLoading && isLoggedIn && user?.role === "admin") {
+      router.push("/dashboard");
     }
-  }, [isLoggedIn, authLoading, router]);
+  }, [isLoggedIn, authLoading, user, router]);
 
   if (authLoading) {
     return (

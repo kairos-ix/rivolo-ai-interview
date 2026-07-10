@@ -18,7 +18,9 @@ const InterviewSchema = new mongoose.Schema({
   duration: { type: Number, default: 0 }, // minutes
   questionsAnswered: { type: Number, default: 0 },
   messages: [MessageSchema],
-  feedback: { type: String, default: "" },
+  feedback: { type: String, default: "" }, // AI feedback
+  mentorFeedback: { type: String, default: "" }, // Mentor feedback
+  reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   isComplete: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
   

@@ -39,18 +39,20 @@ const CANDIDATE_TYPES = [
 ];
 
 const RecruiterSelectionPage = () => {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [candidateType, setCandidateType] = useState("fresher");
   const [loadingCompany, setLoadingCompany] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (!authLoading && !isLoggedIn) {
       router.push("/login");
+    } else if (!authLoading && isLoggedIn && user?.role === "student") {
+      router.push("/dashboard");
     }
-  }, [isLoggedIn, router]);
+  }, [authLoading, isLoggedIn, user, router]);
 
-  if (!isLoggedIn) return null;
+  if (!isLoggedIn || user?.role === "student") return null;
 
   const handleStart = async (companyId: string) => {
     try {

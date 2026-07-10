@@ -117,6 +117,22 @@ const login = async (req, res) => {
       });
     }
 
+    // Check if account is restricted by admin
+    if (user.isRestricted) {
+      await LoginActivity.create({
+        userId: user._id,
+        email,
+        status: "failed",
+        ipAddress,
+        userAgent,
+        deviceInfo,
+        reason: "account_restricted",
+      });
+      return res.status(403).json({ 
+        message: "Your account has been restricted by an administrator. Please contact support for assistance." 
+      });
+    }
+
     // Handle wrong password
     if (!(await user.comparePassword(password))) {
       user.failedLoginAttempts += 1;
@@ -219,7 +235,7 @@ const login = async (req, res) => {
 
     res.json({
       token,
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, permissions: user.permissions, isRestricted: user.isRestricted },
     });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
@@ -274,7 +290,7 @@ const verifyEmail = async (req, res) => {
     res.json({
       message: "Email verified successfully",
       token,
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, permissions: user.permissions, isRestricted: user.isRestricted },
     });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
@@ -330,7 +346,16 @@ const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.userId).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
-    res.json({ user });
+    res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        permissions: user.permissions,
+        isRestricted: user.isRestricted
+      }
+    });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }

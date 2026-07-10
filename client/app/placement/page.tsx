@@ -157,7 +157,7 @@ export default function PlacementPage() {
   // ── Loading skeleton ─────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-background pt-24 pb-16 px-4 sm:px-6">
+      <div className="min-h-[calc(100vh-4rem)] bg-background pt-8 pb-16 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto space-y-6">
           <div className="h-10 w-64 bg-muted rounded-xl animate-pulse" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -174,8 +174,8 @@ export default function PlacementPage() {
   // ── Empty state ───────────────────────────────────────
   if (!data) {
     return (
-      <div className="min-h-screen bg-background pt-24 pb-16 px-4 sm:px-6">
-        <div className="max-w-2xl mx-auto flex flex-col items-center justify-center text-center pt-20 space-y-6">
+      <div className="min-h-[calc(100vh-4rem)] bg-background pt-8 pb-16 px-4 sm:px-6">
+        <div className="max-w-2xl mx-auto flex flex-col items-center justify-center text-center pt-8 space-y-6">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -268,7 +268,7 @@ export default function PlacementPage() {
   }));
 
   return (
-    <div className="min-h-screen bg-background pt-24 pb-16 px-4 sm:px-6">
+    <div className="min-h-[calc(100vh-4rem)] bg-background pt-8 pb-16 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto space-y-8">
 
         {/* ── Header ─────────────────────────────────────── */}

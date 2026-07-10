@@ -11,21 +11,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, Target, BarChart, Sparkles, Search, Puzzle,
   Settings, TrendingUp, Building2, Trophy, ChevronDown,
-  LogOut, User, Grid3x3
+  LogOut, User, Grid3x3, Shield
 } from "lucide-react";
 
 // ── Primary nav (always visible on desktop) ──────────────────
 const primaryLinks = [
-  { href: "/dashboard", label: "Dashboard", icon: <Zap className="w-4 h-4" /> },
-  { href: "/practice", label: "Practice", icon: <Target className="w-4 h-4" /> },
-  { href: "/history", label: "My Sessions", icon: <BarChart className="w-4 h-4" /> },
+  { href: "/dashboard", label: "Dashboard", icon: <Zap className="w-4 h-4" />, roles: ["student", "mentor", "admin"] },
+  { href: "/practice", label: "Practice", icon: <Target className="w-4 h-4" />, roles: ["student"] },
+  { href: "/history", label: "My Sessions", icon: <BarChart className="w-4 h-4" />, roles: ["student"] },
+  { href: "/mentor", label: "Mentor Dashboard", icon: <Building2 className="w-4 h-4" />, roles: ["mentor"] },
+  { href: "/admin", label: "Admin Dashboard", icon: <Shield className="w-4 h-4" />, roles: ["admin"] },
 ];
 
 // ── Tools dropdown ────────────────────────────────────────────
 const toolLinks = [
-  { href: "/placement", label: "Placement Engine", icon: <TrendingUp className="w-4 h-4" />, desc: "Placement readiness score & roadmap" },
-  { href: "/recruiter", label: "Recruiter Sim", icon: <Building2 className="w-4 h-4" />, desc: "Company-specific interview simulation" },
-  { href: "/arena", label: "Challenge Arena", icon: <Trophy className="w-4 h-4" />, desc: "Daily challenges & leaderboard" },
+  { href: "/placement", label: "Placement Engine", icon: <TrendingUp className="w-4 h-4" />, desc: "Placement readiness score & roadmap", roles: ["student", "mentor", "admin"] },
+  { href: "/recruiter", label: "Recruiter Sim", icon: <Building2 className="w-4 h-4" />, desc: "Company-specific interview simulation", roles: ["mentor", "admin"] },
+  { href: "/arena", label: "Challenge Arena", icon: <Trophy className="w-4 h-4" />, desc: "Daily challenges & leaderboard", roles: ["student", "mentor", "admin"] },
 ];
 
 // ── Public nav ────────────────────────────────────────────────
@@ -111,7 +113,9 @@ export function Navbar() {
               {isLoggedIn ? (
                 <>
                   {/* Primary links */}
-                  {primaryLinks.map((link) => (
+                  {primaryLinks
+                    .filter((link) => link.roles.includes(user?.role || "student"))
+                    .map((link) => (
                     <Link key={link.href} href={link.href}>
                       <button className={`relative px-3.5 py-2 text-sm font-medium rounded-full transition-all duration-200 flex items-center gap-1.5 ${
                         isActive(link.href)
@@ -155,7 +159,9 @@ export function Navbar() {
                           className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 z-50"
                         >
                           <div className="p-2 shadow-xl rounded-xl border border-border/60 bg-background/95 backdrop-blur-xl">
-                            {toolLinks.map((tool) => (
+                            {toolLinks
+                              .filter(tool => !tool.roles || tool.roles.includes(user?.role || "student"))
+                              .map((tool) => (
                               <Link key={tool.href} href={tool.href} onClick={() => setToolsOpen(false)}>
                                 <div className={`flex items-start gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
                                   isActive(tool.href)
@@ -292,7 +298,10 @@ export function Navbar() {
                 </div>
 
                 {/* All links flat in mobile */}
-                {[...primaryLinks, ...toolLinks].map((link) => (
+                {[
+                  ...primaryLinks.filter(t => t.roles.includes(user?.role || "student")), 
+                  ...toolLinks.filter(t => !t.roles || t.roles.includes(user?.role || "student"))
+                ].map((link) => (
                   <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)}>
                     <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                       isActive(link.href) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
@@ -303,6 +312,7 @@ export function Navbar() {
                     </div>
                   </Link>
                 ))}
+
 
                 <div className="h-px bg-border/50 my-2" />
 

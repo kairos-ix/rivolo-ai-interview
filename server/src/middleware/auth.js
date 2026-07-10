@@ -24,9 +24,14 @@ const protect = async (req, res, next) => {
     }
 
     // 2. Check if user still exists and if password was changed after token issuance
-    const user = await User.findById(decoded.userId).select('passwordChangedAt');
+    const user = await User.findById(decoded.userId).select('passwordChangedAt role permissions isRestricted');
     if (!user) {
       return res.status(401).json({ message: 'User no longer exists.' });
+    }
+    
+    // 3. Check if user is restricted
+    if (user.isRestricted) {
+      return res.status(401).json({ message: 'Your account has been restricted by an administrator.' });
     }
     
     // Convert JWT iat to ms. If password changed after token was issued, token is invalid
@@ -40,6 +45,7 @@ const protect = async (req, res, next) => {
     // Update session last active time (non-blocking)
     Session.updateOne({ _id: session._id }, { lastActiveAt: Date.now() }).exec();
 
+    req.user = user;
     req.userId = decoded.userId;
     req.sessionId = session._id;
     next();

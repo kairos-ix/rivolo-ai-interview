@@ -5,6 +5,9 @@ export interface StoredUser {
     id: string;
     name: string;
     email: string;
+    role?: 'student' | 'mentor' | 'admin' | string;
+    permissions?: string[];
+    isRestricted?: boolean;
 }
 
 // ── Token ─────────────────────────────────────────────────

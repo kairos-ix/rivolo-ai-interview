@@ -374,7 +374,8 @@ const getInterview = async (req, res) => {
     const interview = await Interview.findOne({
       _id: req.params.id,
       userId: req.userId,
-    });
+    }).populate("reviewedBy", "name");
+    
     if (!interview)
       return res.status(404).json({ message: "Interview not found" });
     res.json({ interview });

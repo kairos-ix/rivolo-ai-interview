@@ -56,11 +56,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (storedToken && storedUser) {
         setTokenState(storedToken);
         setUser(storedUser);
+        
+        // Fetch fresh user data in background
+        try {
+          const { data } = await axiosInstance.get("/api/auth/me");
+          setStoredUser(data.user);
+          setUser(data.user);
+        } catch (error) {
+          // Token might be invalid, logout
+          clearAuth();
+          setTokenState(null);
+          setUser(null);
+        }
       }
 
       setIsLoading(false);
     };
     hydrate();
+    
+    // Add window focus listener to keep user data fresh
+    const handleFocus = async () => {
+      const storedToken = getToken();
+      if (storedToken) {
+        try {
+          const { data } = await axiosInstance.get("/api/auth/me");
+          setStoredUser(data.user);
+          setUser(data.user);
+        } catch (error) {
+          // Ignore error on focus refresh to avoid disruptive logouts on temporary network issues
+        }
+      }
+    };
+    
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, []);
 
   // ── Login ───────────────────────────────────────────────

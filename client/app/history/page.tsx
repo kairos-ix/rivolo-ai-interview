@@ -7,7 +7,7 @@ import axiosInstance from "@/lib/axios";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText, Target, Calendar, Clock, Lightbulb, Trash2 } from "lucide-react";
+import { FileText, Target, Calendar, Clock, Lightbulb, Trash2, CheckCircle } from "lucide-react";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 interface Interview {
@@ -20,7 +20,7 @@ interface Interview {
 
 export default function HistoryPage() {
   const router = useRouter();
-  const { isLoggedIn, isLoading: authLoading } = useAuth();
+  const { isLoggedIn, isLoading: authLoading, user } = useAuth();
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [filterDomain, setFilterDomain] = useState<string>("All");
@@ -72,8 +72,10 @@ export default function HistoryPage() {
   useEffect(() => {
     if (!authLoading && !isLoggedIn) {
       router.push("/login");
+    } else if (!authLoading && isLoggedIn && user?.role === "admin") {
+      router.push("/dashboard");
     }
-  }, [isLoggedIn, authLoading, router]);
+  }, [isLoggedIn, authLoading, user, router]);
 
   useEffect(() => {
     const fetchInterviews = async () => {
@@ -363,6 +365,18 @@ export default function HistoryPage() {
                         </p>
                         <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                           {interviewDetails.feedback}
+                        </p>
+                      </div>
+                    )}
+
+                    {interviewDetails.mentorFeedback && (
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
+                        <p className="text-xs font-bold text-green-700 mb-2 flex items-center gap-1.5 uppercase tracking-wider">
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          Reviewed by {interviewDetails.reviewedBy?.name || "Mentor"}
+                        </p>
+                        <p className="text-sm text-green-800 leading-relaxed whitespace-pre-wrap">
+                          {interviewDetails.mentorFeedback}
                         </p>
                       </div>
                     )}
