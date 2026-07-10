@@ -82,7 +82,8 @@ const login = async (req, res) => {
     const { email, password } = req.body;
     const ipAddress = getClientIP(req);
     const userAgent = req.headers["user-agent"] || "";
-    const deviceInfo = parseUserAgent(userAgent);
+    const fingerprint = req.headers["x-device-fingerprint"] || "";
+    const deviceInfo = parseUserAgent(userAgent, fingerprint);
 
     const user = await User.findOne({ email });
 
@@ -247,7 +248,8 @@ const verifyEmail = async (req, res) => {
 
     const ipAddress = getClientIP(req);
     const userAgent = req.headers["user-agent"] || "";
-    const deviceInfo = parseUserAgent(userAgent);
+    const fingerprint = req.headers["x-device-fingerprint"] || "";
+    const deviceInfo = parseUserAgent(userAgent, fingerprint);
 
     // Create session record
     await Session.create({

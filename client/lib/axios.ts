@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getClientFingerprint } from './fingerprint';
 
 const axiosInstance = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
@@ -17,6 +18,7 @@ axiosInstance.interceptors.request.use(
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
+            config.headers['X-Device-Fingerprint'] = getClientFingerprint();
         }
         return config;
     },

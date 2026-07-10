@@ -70,9 +70,10 @@ const DEVICE_PATTERNS = {
 
 /**
  * Parse a User-Agent string into structured device information.
+ * Uses hardware fingerprinting to detect and override DevTools User-Agent spoofing.
  * Returns: { browser, browserVersion, os, osVersion, device, raw }
  */
-const parseUserAgent = (ua = "") => {
+const parseUserAgent = (ua = "", fingerprintBase64 = "") => {
   const result = {
     browser: "Unknown",
     browserVersion: "",
@@ -113,6 +114,32 @@ const parseUserAgent = (ua = "") => {
     result.device = "Tablet";
   } else {
     result.device = "Desktop";
+  }
+
+  // ── Hardware Fingerprint Verification (Spoof Detection) ──
+  if (fingerprintBase64) {
+    try {
+      const fp = JSON.parse(Buffer.from(fingerprintBase64, 'base64').toString('utf-8'));
+      if (fp.realOs) {
+        const realOsLower = fp.realOs.toLowerCase();
+        // If Client Hints/Platform reports Desktop OS but UserAgent claims Mobile OS
+        if (realOsLower.includes('win') && !result.os.toLowerCase().includes('win')) {
+          result.os = "Windows 10/11"; // Real OS
+          result.osVersion = "";
+          result.device = fp.touchPoints > 0 ? "Tablet" : "Desktop"; // Real Device Type
+        } else if (realOsLower.includes('mac') && !result.os.toLowerCase().includes('mac') && !result.os.toLowerCase().includes('ios')) {
+          result.os = "macOS";
+          result.osVersion = "";
+          result.device = fp.touchPoints > 0 ? "Tablet" : "Desktop";
+        } else if (realOsLower.includes('linux') && !result.os.toLowerCase().includes('linux') && !result.os.toLowerCase().includes('android')) {
+          result.os = "Linux";
+          result.osVersion = "";
+          result.device = fp.touchPoints > 0 ? "Tablet" : "Desktop";
+        }
+      }
+    } catch (e) {
+      // Ignore malformed fingerprint
+    }
   }
 
   return result;

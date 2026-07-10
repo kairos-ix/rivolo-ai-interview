@@ -66,6 +66,9 @@ app.use((req, res, next) => {
 });
 
 // ── Rate Limiters ─────────────────────────────────────────
+// Trust first proxy to allow rate limiter to work behind Render/Vercel
+app.set("trust proxy", 1);
+
 // General API limiter
 const generalLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
