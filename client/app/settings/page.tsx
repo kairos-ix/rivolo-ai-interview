@@ -451,7 +451,7 @@ export default function SettingsPage() {
                   </div>
                   {!session.isCurrent && (
                     <Button size="sm" variant="ghost" onClick={() => promptRevoke(session.id, false)} className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10 px-2 h-8">
-                      <LogOut className="w-3.5 h-3.5 mr-1" /> Revoke
+                      <LogOut className="w-3.5 h-3.5 mr-1" /> Logout
                     </Button>
                   )}
                 </div>
@@ -459,14 +459,14 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between mt-4 p-4 bg-muted/30 rounded-xl border border-border/50">
                 <div>
                   <p className="text-sm font-semibold text-foreground">Log Out All Other Devices</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Revoke access for all devices except this one.</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Logout of all devices except this one.</p>
                 </div>
                 <Button 
                   variant="outline" 
                   onClick={() => promptRevoke("all", true)} 
                   className="text-xs text-destructive hover:bg-destructive hover:text-destructive-foreground border-destructive/20 h-9"
                 >
-                  <LogOut className="w-4 h-4 mr-2" /> Revoke All
+                  <LogOut className="w-4 h-4 mr-2" /> Logout All
                 </Button>
               </div>
             </div>
@@ -615,11 +615,11 @@ export default function SettingsPage() {
 
       <ConfirmModal
         isOpen={revokeModalOpen}
-        title={sessionToRevoke?.isAll ? "Revoke All Other Sessions" : "Revoke Session"}
+        title={sessionToRevoke?.isAll ? "Logout All Other Sessions" : "Logout Session"}
         description={sessionToRevoke?.isAll 
           ? "Are you sure you want to sign out of all other devices? You will remain signed in here." 
           : "Are you sure you want to sign out of this device?"}
-        confirmText="Revoke"
+        confirmText="Logout"
         isDanger={true}
         isLoading={revokeLoading}
         onConfirm={handleRevokeSession}
