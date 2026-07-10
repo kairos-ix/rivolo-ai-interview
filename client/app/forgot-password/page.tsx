@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import React, { useState, useRef } from "react";
 import api from "@/lib/axios";
-import { Mail, KeyRound, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Mail, KeyRound, ArrowLeft, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ForgotPasswordPage() {
@@ -16,6 +16,8 @@ export default function ForgotPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -182,6 +184,9 @@ export default function ForgotPasswordPage() {
                   <p className="text-muted-foreground text-sm">
                     We sent a 6-digit code to <span className="font-semibold text-foreground">{email}</span>
                   </p>
+                  <div className="mt-4 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-500 text-xs px-3 py-2 rounded-lg flex items-center justify-center gap-2 max-w-[280px] mx-auto">
+                    <span>⚠️</span> Please check your spam or junk folder if you don't see it.
+                  </div>
                 </div>
 
                 <form onSubmit={handleResetPassword} className="space-y-6">
@@ -218,29 +223,47 @@ export default function ForgotPasswordPage() {
                       <label htmlFor="password" className="block text-sm font-semibold text-foreground">
                         New Password
                       </label>
-                      <Input
-                        type="password"
-                        id="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                        required
-                        className="rounded-lg"
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          id="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="••••••••"
+                          required
+                          className="rounded-lg pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <label htmlFor="confirmPassword" className="block text-sm font-semibold text-foreground">
                         Confirm New Password
                       </label>
-                      <Input
-                        type="password"
-                        id="confirmPassword"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="••••••••"
-                        required
-                        className="rounded-lg"
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showConfirmPassword ? "text" : "password"}
+                          id="confirmPassword"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="••••••••"
+                          required
+                          className="rounded-lg pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
 
