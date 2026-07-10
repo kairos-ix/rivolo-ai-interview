@@ -41,7 +41,7 @@ function CustomRoleSelect({ value, onChange, disabled, disabledOptions = [] }: {
   const options = ["Student", "Mentor", "Admin"];
   
   return (
-    <div className="relative inline-block w-32" ref={ref}>
+    <div className={`relative inline-block w-32 ${open ? 'z-50' : 'z-10'}`} ref={ref}>
       <button 
         type="button"
         disabled={disabled}
@@ -53,7 +53,7 @@ function CustomRoleSelect({ value, onChange, disabled, disabledOptions = [] }: {
       </button>
 
       {open && (
-        <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-lg shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute z-50 w-full mt-1 flex flex-col bg-background border border-border rounded-lg shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-100">
           {options.map((option) => {
             const isOptionDisabled = disabledOptions.includes(option.toLowerCase());
             return (
