@@ -44,22 +44,22 @@ export default function Home() {
         "Receive real-time constructive feedback after each answer to help you improve immediately.",
     },
     {
-      icon: <BarChart className="w-8 h-8 text-primary" />,
-      title: "Performance Scoring",
+      icon: <TrendingUp className="w-8 h-8 text-primary" />,
+      title: "Placement Readiness",
       description:
-        "Get scored on each interview and track your improvement across different domains.",
+        "Get categorized as 'Placement Ready' and receive personalized roadmaps to bridge your specific knowledge gaps.",
     },
     {
-      icon: <RefreshCw className="w-8 h-8 text-primary" />,
-      title: "Multiple Attempts",
+      icon: <FileText className="w-8 h-8 text-primary" />,
+      title: "Resume Analysis",
       description:
-        "Practice unlimited interviews across all domains to build confidence and expertise.",
+        "Upload your resume to extract skills, gauge your experience level, and get tailored domain recommendations.",
     },
     {
-      icon: <Lightbulb className="w-8 h-8 text-primary" />,
-      title: "Smart Follow-ups",
+      icon: <Users className="w-8 h-8 text-primary" />,
+      title: "Mentor Reviews",
       description:
-        "AI generates contextual follow-up questions based on your previous answers to dive deeper.",
+        "Verified mentors can review your AI interview transcripts and provide nuanced, human-in-the-loop guidance.",
     },
   ];
 
@@ -174,7 +174,7 @@ export default function Home() {
     },
     {
       q: "Who created Rivolo?",
-      a: "Rivolo was created by Sahil (also known as kairos), an aspiring software engineer. It's built to democratize high-quality technical interview prep.",
+      a: "Rivolo was developed by Sahil (kairos) as part of an internship program to demonstrate advanced full-stack development, AI integration, and robust security practices.",
     },
   ];
 
@@ -197,9 +197,9 @@ export default function Home() {
             </h1>
           </div>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Practice with Rivolo, your personal AI-powered mock interviewer tailored to your domain.
-            Get instant intelligent feedback powered by Llama 3.3 70B and watch your confidence grow with
-            every session.
+            Bridge the gap between theoretical knowledge and practical interview readiness.
+            Practice with a highly adaptive AI engine, analyze your resume, and get actionable, 
+            personalized feedback to land your dream job.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Button
@@ -229,9 +229,9 @@ export default function Home() {
               label: "11+ Domains",
               value: "JavaScript, React, Python, Cybersecurity, and more",
             },
-            { label: "AI Powered", value: "Llama 3.3 70B via Groq for intelligent feedback" },
-            { label: "24/7 Available", value: "Practice anytime, anywhere" },
-            { label: "Instant Scoring", value: "Get results in seconds" },
+            { label: "Adaptive AI", value: "Llama 3.3 70B via Groq scales difficulty in real-time" },
+            { label: "Placement Engine", value: "Analyze readiness & generate learning roadmaps" },
+            { label: "Resume Parsing", value: "AI-driven skill extraction & recommendations" },
           ].map((stat, i) => (
             <Card
               key={i}
