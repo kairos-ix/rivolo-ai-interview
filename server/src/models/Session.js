@@ -5,7 +5,9 @@ const SessionSchema = new mongoose.Schema({
   tokenHash: { type: String, required: true },
   deviceInfo: {
     browser: { type: String, default: "Unknown" },
+    browserVersion: { type: String, default: "" },
     os: { type: String, default: "Unknown" },
+    osVersion: { type: String, default: "" },
     device: { type: String, default: "Unknown" },
   },
   ipAddress: { type: String, default: "unknown" },

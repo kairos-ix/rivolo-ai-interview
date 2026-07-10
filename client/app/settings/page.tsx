@@ -441,11 +441,11 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                        {session.deviceInfo.browser} on {session.deviceInfo.os}
+                        {session.deviceInfo.browser}{session.deviceInfo.browserVersion ? ` ${session.deviceInfo.browserVersion.split('.')[0]}` : ''} on {session.deviceInfo.os}{session.deviceInfo.osVersion ? ` ${session.deviceInfo.osVersion}` : ''}
                         {session.isCurrent && <span className="text-[10px] uppercase font-bold bg-green-500/10 text-green-600 px-1.5 py-0.5 rounded-sm">Current</span>}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        IP: {session.ipAddress} · Last active: {new Date(session.lastActiveAt).toLocaleString()}
+                        {session.deviceInfo.device} · IP: {session.ipAddress} · Last active: {new Date(session.lastActiveAt).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -501,7 +501,7 @@ export default function SettingsPage() {
                         {new Date(log.timestamp).toLocaleString()}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                        {log.deviceInfo.browser} ({log.deviceInfo.os})
+                        {log.deviceInfo.browser}{log.deviceInfo.browserVersion ? ` ${log.deviceInfo.browserVersion.split('.')[0]}` : ''} ({log.deviceInfo.os}{log.deviceInfo.osVersion ? ` ${log.deviceInfo.osVersion}` : ''})
                       </td>
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                         {log.ipAddress}

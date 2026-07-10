@@ -12,7 +12,9 @@ const LoginActivitySchema = new mongoose.Schema({
   userAgent: { type: String, default: "" },
   deviceInfo: {
     browser: { type: String, default: "Unknown" },
+    browserVersion: { type: String, default: "" },
     os: { type: String, default: "Unknown" },
+    osVersion: { type: String, default: "" },
     device: { type: String, default: "Unknown" },
   },
   reason: { type: String, default: "" },
