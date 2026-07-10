@@ -10,7 +10,7 @@ import {
   Brain, Search, Mic, Link as LinkIcon, 
   AlertCircle, MessageCircle, Clock, Eye, TrendingUp,
   Sparkles, Users, Ruler, AlertTriangle, HelpCircle, FileText,
-  CheckCircle2, RotateCcw
+  CheckCircle2, RotateCcw, ShieldCheck, Trophy, Briefcase, Lock, LayoutDashboard
 } from "lucide-react";
 
 export default function Home() {
@@ -60,6 +60,42 @@ export default function Home() {
       title: "Mentor Reviews",
       description:
         "Verified mentors can review your AI interview transcripts and provide nuanced, human-in-the-loop guidance.",
+    },
+    {
+      icon: <Trophy className="w-8 h-8 text-primary" />,
+      title: "Challenge Arena",
+      description:
+        "Participate in daily coding and conceptual challenges with leaderboards to keep you engaged and continuously learning.",
+    },
+    {
+      icon: <Briefcase className="w-8 h-8 text-primary" />,
+      title: "Recruiter Sim",
+      description:
+        "Experience specialized interview simulations tailored to mimic the exact hiring patterns of top-tier tech companies.",
+    },
+    {
+      icon: <ShieldCheck className="w-8 h-8 text-primary" />,
+      title: "Enterprise Security",
+      description:
+        "Your data is protected by multiple layers including XSS sanitization, NoSQL injection prevention, and strict rate limiting.",
+    },
+    {
+      icon: <Lock className="w-8 h-8 text-primary" />,
+      title: "Anti-Cheat Engine",
+      description:
+        "Advanced algorithms hash answers and detect duplicates in real-time, penalizing copied text to simulate a strict interview environment.",
+    },
+    {
+      icon: <BarChart className="w-8 h-8 text-primary" />,
+      title: "Visual Analytics",
+      description:
+        "Track your proficiency across different domains with interactive Radar and Bar charts on your performance dashboard.",
+    },
+    {
+      icon: <LayoutDashboard className="w-8 h-8 text-primary" />,
+      title: "Role-Based Dashboards",
+      description:
+        "Dedicated, specialized views and tools designed specifically for Students, Mentors, and Administrators.",
     },
   ];
 
