@@ -316,7 +316,7 @@ export default function Home() {
                   <h3 className="text-xl font-semibold text-foreground">
                     {cap.title}
                   </h3>
-                  <span className="text-xs bg-accent/10 text-accent font-medium px-2 py-0.5 rounded-full">
+                  <span className="text-xs bg-primary/10 text-primary font-semibold px-2.5 py-1 rounded-full border border-primary/20">
                     {cap.highlight}
                   </span>
                 </div>
