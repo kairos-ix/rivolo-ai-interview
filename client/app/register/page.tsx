@@ -22,17 +22,7 @@ const RegisterPage = () => {
     password: "",
   });
 
-  useEffect(() => {
-    const savedData = sessionStorage.getItem("registerFormData");
-    if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData);
-        setTimeout(() => {
-          setFormData(parsed);
-        }, 0);
-      } catch (err) {}
-    }
-  }, []);
+
 
   const { register, isLoading, isLoggedIn } = useAuth();
   const router = useRouter();
@@ -47,9 +37,7 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    const newData = { ...formData, [name]: value };
-    setFormData(newData);
-    sessionStorage.setItem("registerFormData", JSON.stringify(newData));
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,7 +52,6 @@ const RegisterPage = () => {
     setError("");
     try {
       await register(formData.name, formData.email, formData.password);
-      sessionStorage.removeItem("registerFormData");
     } catch (error: any) {
       setError(error?.response?.data?.message || error?.message || "Failed to create account. Please try again.");
     }

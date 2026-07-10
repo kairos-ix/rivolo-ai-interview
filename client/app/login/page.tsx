@@ -15,17 +15,7 @@ const LoginPage = () => {
     password: "",
   });
 
-  useEffect(() => {
-    const savedData = sessionStorage.getItem("loginFormData");
-    if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData);
-        setTimeout(() => {
-          setFormData(parsed);
-        }, 0);
-      } catch (err) {}
-    }
-  }, []);
+
 
   const { login, isLoading, isLoggedIn } = useAuth();
   const router = useRouter();
@@ -41,9 +31,7 @@ const LoginPage = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    const newData = { ...formData, [name]: value };
-    setFormData(newData);
-    sessionStorage.setItem("loginFormData", JSON.stringify(newData));
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,7 +39,6 @@ const LoginPage = () => {
     setError("");
     try {
       await login(formData.email, formData.password);
-      sessionStorage.removeItem("loginFormData");
     } catch (error: any) {
       setError(error?.response?.data?.message || "Invalid email or password. Please try again.");
     }
