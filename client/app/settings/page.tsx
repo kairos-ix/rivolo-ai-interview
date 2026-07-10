@@ -60,6 +60,10 @@ export default function SettingsPage() {
   const [securityAlerts, setSecurityAlerts] = useState<any[]>([]);
   const [securityLoading, setSecurityLoading] = useState(false);
 
+  const [revokeModalOpen, setRevokeModalOpen] = useState(false);
+  const [sessionToRevoke, setSessionToRevoke] = useState<{ id: string; isAll: boolean } | null>(null);
+  const [revokeLoading, setRevokeLoading] = useState(false);
+
   useEffect(() => {
     if (isLoggedIn && !isLoading) {
       const fetchSecurityData = async () => {
@@ -83,22 +87,29 @@ export default function SettingsPage() {
     }
   }, [isLoggedIn, isLoading]);
 
-  const handleRevokeSession = async (id: string) => {
+  const handleRevokeSession = async () => {
+    if (!sessionToRevoke) return;
+    setRevokeLoading(true);
     try {
-      await axiosInstance.delete(`/api/auth/sessions/${id}`);
-      setSessions(sessions.filter((s) => s.id !== id));
+      if (sessionToRevoke.isAll) {
+        await axiosInstance.delete("/api/auth/sessions");
+        setSessions(sessions.filter((s) => s.isCurrent));
+      } else {
+        await axiosInstance.delete(`/api/auth/sessions/${sessionToRevoke.id}`);
+        setSessions(sessions.filter((s) => s.id !== sessionToRevoke.id));
+      }
+      setRevokeModalOpen(false);
+      setSessionToRevoke(null);
     } catch (err) {
       console.error(err);
+    } finally {
+      setRevokeLoading(false);
     }
   };
 
-  const handleRevokeAllSessions = async () => {
-    try {
-      await axiosInstance.delete("/api/auth/sessions");
-      setSessions(sessions.filter((s) => s.isCurrent));
-    } catch (err) {
-      console.error(err);
-    }
+  const promptRevoke = (id: string, isAll: boolean = false) => {
+    setSessionToRevoke({ id, isAll });
+    setRevokeModalOpen(true);
   };
 
   const handleUpdateName = async () => {
@@ -411,7 +422,7 @@ export default function SettingsPage() {
               <h2 className="text-lg font-semibold text-foreground">Active Sessions</h2>
             </div>
             {sessions.length > 1 && (
-              <Button size="sm" variant="outline" onClick={handleRevokeAllSessions} className="text-xs h-8">
+              <Button size="sm" variant="outline" onClick={() => promptRevoke("all", true)} className="text-xs h-8">
                 Log Out All Other Devices
               </Button>
             )}
@@ -439,12 +450,25 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   {!session.isCurrent && (
-                    <Button size="sm" variant="ghost" onClick={() => handleRevokeSession(session.id)} className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10 px-2 h-8">
+                    <Button size="sm" variant="ghost" onClick={() => promptRevoke(session.id, false)} className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10 px-2 h-8">
                       <LogOut className="w-3.5 h-3.5 mr-1" /> Revoke
                     </Button>
                   )}
                 </div>
               ))}
+              <div className="flex items-center justify-between mt-4 p-4 bg-muted/30 rounded-xl border border-border/50">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Log Out All Other Devices</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Revoke access for all devices except this one.</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => promptRevoke("all", true)} 
+                  className="text-xs text-destructive hover:bg-destructive hover:text-destructive-foreground border-destructive/20 h-9"
+                >
+                  <LogOut className="w-4 h-4 mr-2" /> Revoke All
+                </Button>
+              </div>
             </div>
           )}
         </Card>
@@ -588,6 +612,19 @@ export default function SettingsPage() {
           )}
         </AnimatePresence>
       </ConfirmModal>
+
+      <ConfirmModal
+        isOpen={revokeModalOpen}
+        title={sessionToRevoke?.isAll ? "Revoke All Other Sessions" : "Revoke Session"}
+        description={sessionToRevoke?.isAll 
+          ? "Are you sure you want to sign out of all other devices? You will remain signed in here." 
+          : "Are you sure you want to sign out of this device?"}
+        confirmText="Revoke"
+        isDanger={true}
+        isLoading={revokeLoading}
+        onConfirm={handleRevokeSession}
+        onCancel={() => { setRevokeModalOpen(false); setSessionToRevoke(null); }}
+      />
     </div>
   );
 }
