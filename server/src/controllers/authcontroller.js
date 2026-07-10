@@ -184,8 +184,8 @@ const login = async (req, res) => {
     const token = signToken(user._id.toString());
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
-    // Revoke all other sessions to prevent duplicate sessions from multiple devices (disabled to allow manual management in UI)
-    // await Session.updateMany({ userId: user._id, isRevoked: false }, { isRevoked: true });
+    // Revoke all other sessions to prevent duplicate sessions from multiple devices
+    await Session.updateMany({ userId: user._id, isRevoked: false }, { isRevoked: true });
 
     // Create session record
     await Session.create({
