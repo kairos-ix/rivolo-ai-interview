@@ -165,7 +165,7 @@ export default function MentorDashboard() {
         </AnimatePresence>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card className="p-5 border-border/60">
             <p className="text-sm text-muted-foreground font-medium mb-1 flex items-center gap-2 text-blue-500">
               <BookOpen className="w-4 h-4" /> Total Interviews
@@ -204,7 +204,7 @@ export default function MentorDashboard() {
                 <div key={interview._id} className="hover:bg-muted/20 transition-colors">
                   {/* Interview Row */}
                   <div
-                    className="px-6 py-4 flex items-center justify-between cursor-pointer"
+                    className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer"
                     onClick={() => toggleExpand(interview._id, interview.mentorFeedback)}
                   >
                     <div className="flex items-center gap-4 min-w-0 flex-1">
@@ -235,7 +235,7 @@ export default function MentorDashboard() {
                     </div>
 
                     {/* Score + Status + Expand */}
-                    <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="flex items-center gap-3 flex-shrink-0 self-start sm:self-auto">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${getScoreColor(interview.score)}`}>
                         {interview.score}/100
                       </span>

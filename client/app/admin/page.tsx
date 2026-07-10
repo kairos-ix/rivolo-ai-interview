@@ -202,8 +202,8 @@ export default function AdminDashboard() {
           <h2 className="text-lg font-bold">User Management</h2>
         </div>
 
-        <div>
-          <table className="w-full text-sm text-left">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left whitespace-nowrap">
             <thead className="border-b border-border/50">
               <tr>
                 {["Name", "Email", "Joined", "Status", "Role", "Actions"].map((h) => (

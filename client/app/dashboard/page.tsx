@@ -570,7 +570,7 @@ const DashboardPage = () => {
         </section>
 
         {interviews.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="p-5 border-border/60">
               <p className="text-sm text-muted-foreground font-medium mb-1 flex items-center gap-2"><Target className="w-4 h-4"/> Total Sessions</p>
               <h3 className="text-3xl font-black">{interviews.length}</h3>
