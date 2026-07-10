@@ -24,7 +24,7 @@ interface MetricsState {
   admins: number;
 }
 
-function CustomRoleSelect({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled?: boolean }) {
+function CustomRoleSelect({ value, onChange, disabled, disabledOptions = [] }: { value: string; onChange: (v: string) => void; disabled?: boolean; disabledOptions?: string[] }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -54,23 +54,31 @@ function CustomRoleSelect({ value, onChange, disabled }: { value: string; onChan
 
       {open && (
         <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-lg shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-          {options.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => {
-                onChange(option.toLowerCase());
-                setOpen(false);
-              }}
-              className={`w-full text-left px-3 py-2 text-sm transition-colors ${
-                value.toLowerCase() === option.toLowerCase()
-                  ? "bg-primary text-primary-foreground font-medium"
-                  : "text-foreground hover:bg-muted"
-              }`}
-            >
-              {option}
-            </button>
-          ))}
+          {options.map((option) => {
+            const isOptionDisabled = disabledOptions.includes(option.toLowerCase());
+            return (
+              <button
+                key={option}
+                type="button"
+                disabled={isOptionDisabled}
+                onClick={() => {
+                  if (!isOptionDisabled) {
+                    onChange(option.toLowerCase());
+                    setOpen(false);
+                  }
+                }}
+                className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                  value.toLowerCase() === option.toLowerCase()
+                    ? "bg-primary text-primary-foreground font-medium"
+                    : isOptionDisabled
+                    ? "text-muted-foreground/50 cursor-not-allowed"
+                    : "text-foreground hover:bg-muted"
+                }`}
+              >
+                {option}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
@@ -256,7 +264,8 @@ export default function AdminDashboard() {
                       <CustomRoleSelect
                         value={user.role || "student"}
                         onChange={(newRole) => handleRoleChange(user._id, newRole)}
-                        disabled={currentUser?.id === user._id || currentUser?.id === user.id}
+                        disabled={currentUser?.id === user._id || currentUser?.id === user.id || user.role === 'admin'}
+                        disabledOptions={["admin"]}
                       />
                     </td>
                     <td className="px-6 py-4">
