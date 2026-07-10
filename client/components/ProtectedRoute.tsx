@@ -57,8 +57,12 @@ export default function ProtectedRoute({
   // Show nothing or a loader while checking auth state
   if (isLoading || !isLoggedIn || !user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-black">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+      <div className="flex-1 bg-background py-8 md:py-12 px-4 min-h-screen">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="h-9 w-64 bg-muted rounded-xl animate-pulse" />
+          <div className="h-4 w-96 bg-muted rounded-lg animate-pulse" />
+          <div className="h-96 bg-muted rounded-2xl animate-pulse mt-8" />
+        </div>
       </div>
     );
   }

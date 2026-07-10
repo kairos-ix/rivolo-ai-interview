@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import React, { useState, useRef } from "react";
@@ -103,7 +104,7 @@ export default function ForgotPasswordPage() {
         className="w-full max-w-md relative z-10"
       >
         <div className="flex justify-center mb-6">
-          <img src="/favicon.svg" alt="Logo" className="w-12 h-12 rounded-xl shadow-md" />
+          <Image src="/favicon.svg" alt="Logo" width={48} height={48} className="w-12 h-12 rounded-xl shadow-md" />
         </div>
 
         <Card className="p-8 border border-border/50 shadow-2xl bg-card/80 backdrop-blur-sm">

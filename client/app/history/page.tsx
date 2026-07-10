@@ -119,10 +119,28 @@ export default function HistoryPage() {
 
   if (authLoading || dataLoading) {
     return (
-      <div className="min-h-[100dvh] bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading history…</p>
+      <div className="min-h-[calc(100vh-4rem)] bg-background pt-8 pb-16 px-4 sm:px-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Header skeleton */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="h-8 w-48 bg-muted rounded-xl animate-pulse" />
+              <div className="h-4 w-64 bg-muted rounded-lg animate-pulse" />
+            </div>
+            <div className="h-9 w-28 bg-muted rounded-full animate-pulse" />
+          </div>
+          {/* Filter skeleton */}
+          <div className="flex gap-2">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-8 w-20 bg-muted rounded-full animate-pulse" />
+            ))}
+          </div>
+          {/* Row skeletons */}
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-20 bg-muted rounded-2xl animate-pulse" />
+            ))}
+          </div>
         </div>
       </div>
     );

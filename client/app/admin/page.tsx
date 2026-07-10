@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "@/lib/axios";
 import { StoredUser } from "@/lib/auth";
 import { Card } from "@/components/ui/card";
@@ -99,13 +99,7 @@ export default function AdminDashboard() {
     }
   }, [authLoading, isLoggedIn, currentUser, router]);
 
-  useEffect(() => {
-    if (isLoggedIn && currentUser?.role === "admin") {
-      fetchData(true);
-    }
-  }, [page, isLoggedIn, currentUser?.role]);
-
-  const fetchData = async (showLoading = true) => {
+  const fetchData = useCallback(async (showLoading = true) => {
     try {
       if (showLoading) setLoading(true);
       const [usersRes, metricsRes] = await Promise.all([
@@ -121,7 +115,14 @@ export default function AdminDashboard() {
     } finally {
       if (showLoading) setLoading(false);
     }
-  };
+  }, [page]);
+
+  useEffect(() => {
+    if (isLoggedIn && currentUser?.role === "admin") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchData(true);
+    }
+  }, [page, isLoggedIn, currentUser?.role, fetchData]);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axios";
 import { useAuth } from "@/hooks/useAuth";
@@ -59,13 +59,7 @@ export default function MentorDashboard() {
     }
   }, [authLoading, isLoggedIn, user, router]);
 
-  useEffect(() => {
-    if (isLoggedIn && (user?.role === "mentor" || user?.role === "admin")) {
-      fetchInterviews(true);
-    }
-  }, [page, isLoggedIn, user?.role]);
-
-  const fetchInterviews = async (showLoading = true) => {
+  const fetchInterviews = useCallback(async (showLoading = true) => {
     try {
       if (showLoading) setLoading(true);
       const res = await axiosInstance.get(`/api/mentor/interviews?page=${page}&limit=10`);
@@ -76,7 +70,14 @@ export default function MentorDashboard() {
     } finally {
       if (showLoading) setLoading(false);
     }
-  };
+  }, [page]);
+
+  useEffect(() => {
+    if (isLoggedIn && (user?.role === "mentor" || user?.role === "admin")) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchInterviews(true);
+    }
+  }, [page, isLoggedIn, user?.role, fetchInterviews]);
 
   const handleSubmitFeedback = async (interviewId: string) => {
     if (!feedbackText.trim()) return;

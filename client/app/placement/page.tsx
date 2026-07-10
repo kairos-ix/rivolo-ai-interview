@@ -61,7 +61,7 @@ const CANDIDATE_TYPES = [
 ];
 
 export default function PlacementPage() {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
   const [data, setData] = useState<PlacementData | null>(null);
@@ -96,13 +96,32 @@ export default function PlacementPage() {
   }, []);
 
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (!authLoading && !isLoggedIn) {
       router.push("/login");
       return;
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchReadiness();
-  }, [isLoggedIn, router, fetchReadiness]);
+    if (!authLoading && isLoggedIn) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchReadiness();
+    }
+  }, [authLoading, isLoggedIn, router, fetchReadiness]);
+
+  // Auth loading skeleton
+  if (authLoading || (!authLoading && !isLoggedIn)) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] bg-background pt-8 pb-16 px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="h-10 w-64 bg-muted rounded-xl animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-48 bg-muted rounded-2xl animate-pulse" />
+            ))}
+          </div>
+          <div className="h-64 bg-muted rounded-2xl animate-pulse" />
+        </div>
+      </div>
+    );
+  }
 
   const handleGenerate = async (type?: string) => {
     try {

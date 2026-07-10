@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
@@ -48,7 +49,7 @@ const LoginPage = () => {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <img src="/favicon.svg" alt="Logo" className="w-12 h-12 rounded-xl shadow-md" />
+          <Image src="/favicon.svg" alt="Logo" width={48} height={48} className="w-12 h-12 rounded-xl shadow-md" />
         </div>
 
         <Card className="p-8 border border-border/50 shadow-lg">

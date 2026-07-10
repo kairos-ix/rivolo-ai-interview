@@ -488,7 +488,45 @@ const DashboardPage = () => {
     } catch (error) { console.error(error); } finally { setDeleteActionLoading(false); }
   };
 
-  if (authLoading) return <div className="min-h-[100dvh] bg-background flex items-center justify-center">Loading…</div>;
+  if (authLoading || (!authLoading && !isLoggedIn)) {
+    return (
+      <div className="flex-1 bg-background">
+        <div className="max-w-6xl mx-auto px-4 py-12 space-y-8">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="h-4 w-32 bg-muted rounded-lg animate-pulse" />
+              <div className="h-8 w-52 bg-muted rounded-xl animate-pulse" />
+            </div>
+            <div className="h-10 w-36 bg-muted rounded-full animate-pulse" />
+          </div>
+          {/* Stat cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-24 bg-muted rounded-2xl animate-pulse" />
+            ))}
+          </div>
+          {/* Tab bar */}
+          <div className="flex gap-6 border-b border-border/50 pb-0">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-6 w-20 bg-muted rounded-lg animate-pulse mb-2" />
+            ))}
+          </div>
+          {/* Charts */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="h-72 bg-muted rounded-2xl animate-pulse" />
+            <div className="h-72 bg-muted rounded-2xl animate-pulse" />
+          </div>
+          {/* Session rows */}
+          <div className="space-y-3">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-16 bg-muted rounded-2xl animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (!isLoggedIn) return null;
 
   const avgScore = interviews.length ? Math.round(interviews.reduce((s, i) => s + i.score, 0) / interviews.length) : 0;

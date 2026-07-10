@@ -26,7 +26,7 @@ const primaryLinks = [
 // ── Tools dropdown ────────────────────────────────────────────
 const toolLinks = [
   { href: "/placement", label: "Placement Engine", icon: <TrendingUp className="w-4 h-4" />, desc: "Placement readiness score & roadmap", roles: ["student", "mentor", "admin"] },
-  { href: "/recruiter", label: "Recruiter Sim", icon: <Building2 className="w-4 h-4" />, desc: "Company-specific interview simulation", roles: ["mentor", "admin"] },
+  { href: "/recruiter", label: "Recruiter Sim", icon: <Building2 className="w-4 h-4" />, desc: "Company-specific interview simulation", roles: ["student", "mentor", "admin"] },
   { href: "/arena", label: "Challenge Arena", icon: <Trophy className="w-4 h-4" />, desc: "Daily challenges & leaderboard", roles: ["student", "mentor", "admin"] },
 ];
 

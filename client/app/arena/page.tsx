@@ -86,15 +86,15 @@ function TimeRemaining({ expiresAt }: { expiresAt: string }) {
 }
 
 const ArenaPage = () => {
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<"all" | "daily" | "weekly">("all");
 
   useEffect(() => {
-    if (!isLoggedIn) router.push("/login");
-  }, [isLoggedIn, router]);
+    if (!authLoading && !isLoggedIn) router.push("/login");
+  }, [authLoading, isLoggedIn, router]);
 
   const fetchChallenges = useCallback(async () => {
     try {
@@ -114,6 +114,27 @@ const ArenaPage = () => {
       fetchChallenges();
     }
   }, [isLoggedIn, fetchChallenges]);
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-background pt-24 pb-16 px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto space-y-8">
+          {/* Header skeleton */}
+          <div className="text-center space-y-4">
+            <div className="w-20 h-20 mx-auto rounded-2xl bg-muted animate-pulse" />
+            <div className="h-10 w-64 bg-muted rounded-xl mx-auto animate-pulse" />
+            <div className="h-5 w-96 bg-muted rounded-lg mx-auto animate-pulse" />
+          </div>
+          {/* Challenge card skeletons */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-44 bg-muted rounded-2xl animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) return null;
 

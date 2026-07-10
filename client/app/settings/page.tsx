@@ -198,8 +198,22 @@ export default function SettingsPage() {
 
   if (isLoading || !isLoggedIn) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="flex-1 bg-background py-8 md:py-12 px-4">
+        <div className="max-w-3xl mx-auto space-y-8">
+          {/* Header */}
+          <div className="space-y-2">
+            <div className="h-9 w-56 bg-muted rounded-xl animate-pulse" />
+            <div className="h-4 w-80 bg-muted rounded-lg animate-pulse" />
+          </div>
+          {/* Profile card */}
+          <div className="h-44 bg-muted rounded-2xl animate-pulse" />
+          {/* Password card */}
+          <div className="h-64 bg-muted rounded-2xl animate-pulse" />
+          {/* Security card */}
+          <div className="h-72 bg-muted rounded-2xl animate-pulse" />
+          {/* Sessions card */}
+          <div className="h-48 bg-muted rounded-2xl animate-pulse" />
+        </div>
       </div>
     );
   }

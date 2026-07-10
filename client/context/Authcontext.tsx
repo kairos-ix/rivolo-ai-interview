@@ -62,8 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const { data } = await axiosInstance.get("/api/auth/me");
           setStoredUser(data.user);
           setUser(data.user);
-        } catch (error) {
-          // Token might be invalid, logout
+        } catch (error: any) {
+          // Token is invalid or user is restricted — force logout
           clearAuth();
           setTokenState(null);
           setUser(null);
@@ -82,15 +82,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const { data } = await axiosInstance.get("/api/auth/me");
           setStoredUser(data.user);
           setUser(data.user);
-        } catch (error) {
-          // Ignore error on focus refresh to avoid disruptive logouts on temporary network issues
+        } catch (error: any) {
+          const status = error?.response?.status;
+          // 401 = session invalid or user restricted → force logout immediately
+          if (status === 401 || status === 403) {
+            clearAuth();
+            setTokenState(null);
+            setUser(null);
+            router.push("/login");
+          }
+          // Other errors (network timeout, 500) are transient — ignore to avoid disruptive logouts
         }
       }
     };
     
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
-  }, []);
+  }, [router]);
 
   // ── Login ───────────────────────────────────────────────
   const login = useCallback(

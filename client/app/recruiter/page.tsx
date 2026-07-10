@@ -47,12 +47,26 @@ const RecruiterSelectionPage = () => {
   useEffect(() => {
     if (!authLoading && !isLoggedIn) {
       router.push("/login");
-    } else if (!authLoading && isLoggedIn && user?.role === "student") {
-      router.push("/dashboard");
     }
-  }, [authLoading, isLoggedIn, user, router]);
+  }, [authLoading, isLoggedIn, router]);
 
-  if (!isLoggedIn || user?.role === "student") return null;
+  if (authLoading) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] bg-background pt-8 pb-16 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="h-9 w-72 bg-muted rounded-xl animate-pulse" />
+          <div className="h-5 w-96 bg-muted rounded-lg animate-pulse" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="h-48 bg-muted rounded-2xl animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isLoggedIn) return null;
 
   const handleStart = async (companyId: string) => {
     try {
