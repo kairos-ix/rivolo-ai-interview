@@ -18,25 +18,25 @@
 
 ---
 
-## 📖 Table of Contents
+## Table of Contents
 
-1. [Overview & Problem Statement](#-overview--problem-statement)
-2. [Core Features Deep Dive](#-core-features-deep-dive)
+1. [Overview & Problem Statement](#overview--problem-statement)
+2. [Core Features Deep Dive](#core-features-deep-dive)
     - [AI-Powered Adaptive Engine](#1-ai-powered-adaptive-engine)
     - [Placement Readiness Analytics](#2-placement-readiness-analytics)
     - [Intelligent Resume Analysis](#3-intelligent-resume-analysis)
     - [Human-in-the-Loop Mentorship](#4-human-in-the-loop-mentorship)
-3. [Technical Architecture](#-technical-architecture)
-4. [Security Infrastructure](#-security-infrastructure)
-5. [Local Development Setup](#-local-development-setup)
-6. [Project Structure](#-project-structure)
-7. [Future Roadmap](#-future-roadmap)
-8. [Contributing](#-contributing)
-9. [License](#-license)
+3. [Technical Architecture](#technical-architecture)
+4. [Security Infrastructure](#security-infrastructure)
+5. [Local Development Setup](#local-development-setup)
+6. [Project Directory Structure](#project-directory-structure)
+7. [Future Roadmap](#future-roadmap)
+8. [Contributing](#contributing)
+9. [License](#license)
 
 ---
 
-## 🎯 Overview & Problem Statement
+## Overview & Problem Statement
 
 Technical interviews are notoriously difficult to prepare for. Traditional preparation involves grinding static algorithmic questions or reading rigid behavioral guides, neither of which accurately simulate the dynamic, high-pressure environment of a real interview.
 
@@ -44,7 +44,7 @@ Technical interviews are notoriously difficult to prepare for. Traditional prepa
 
 ---
 
-## ✨ Core Features Deep Dive
+## Core Features Deep Dive
 
 ### 1. AI-Powered Adaptive Engine
 The heartbeat of Rivolo is its custom interview engine, powered by the **Groq API** (utilizing the LLaMA-3.3-70b-versatile model). Groq's LPU (Language Processing Unit) architecture allows for ultra-low latency inference, making the chat feel instantaneous and conversational.
@@ -84,7 +84,7 @@ While AI is powerful, human nuance is irreplaceable. Rivolo features a comprehen
 
 ---
 
-## 🏗️ Technical Architecture
+## Technical Architecture
 
 Rivolo is built on a modern, decoupled Client-Server architecture ensuring scalability, maintainability, and high performance.
 
@@ -105,7 +105,7 @@ Rivolo is built on a modern, decoupled Client-Server architecture ensuring scala
 
 ---
 
-## 🔒 Security Infrastructure
+## Security Infrastructure
 
 Security is treated as a first-class citizen in the Rivolo architecture. The application implements multiple defensive layers to protect user data and ensure platform stability:
 
@@ -121,7 +121,7 @@ Security is treated as a first-class citizen in the Rivolo architecture. The app
 
 ---
 
-## 💻 Local Development Setup
+## Local Development Setup
 
 To run Rivolo locally for development or testing, follow these steps meticulously.
 
@@ -195,7 +195,7 @@ The application will now be accessible in your browser at **http://localhost:300
 
 ---
 
-## 📁 Project Directory Structure
+## Project Directory Structure
 
 A high-level overview of the codebase to help you navigate:
 
@@ -237,7 +237,7 @@ rivolo-ai-interview/
 
 ---
 
-## 🔮 Future Roadmap
+## Future Roadmap
 
 Rivolo is continuously evolving. Planned upcoming features include:
 1. **Voice-to-Text & Text-to-Voice:** Integrating WebRTC and Whisper/ElevenLabs APIs to conduct actual spoken interviews.
@@ -246,7 +246,7 @@ Rivolo is continuously evolving. Planned upcoming features include:
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions, bug reports, and feature requests are highly appreciated! 
 
@@ -258,7 +258,7 @@ Contributions, bug reports, and feature requests are highly appreciated!
 
 ---
 
-## 📜 License
+## License
 
 This project is open source and available under the [MIT License](LICENSE).
 
