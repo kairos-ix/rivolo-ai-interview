@@ -264,8 +264,7 @@ export default function AdminDashboard() {
                       <CustomRoleSelect
                         value={user.role || "student"}
                         onChange={(newRole) => handleRoleChange(user._id, newRole)}
-                        disabled={currentUser?.id === user._id || currentUser?.id === user.id || user.role === 'admin'}
-                        disabledOptions={["admin"]}
+                        disabled={currentUser?.id === user._id || currentUser?.id === user.id}
                       />
                     </td>
                     <td className="px-6 py-4">
