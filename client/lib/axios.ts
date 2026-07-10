@@ -28,6 +28,11 @@ axiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
+            // Do not globally intercept 401s from the login route (let the component handle it)
+            if (error.config?.url?.includes('/login')) {
+                return Promise.reject(error);
+            }
+            
             // Clear stale auth data and redirect to login
             if (typeof window !== 'undefined') {
                 localStorage.removeItem('token');
