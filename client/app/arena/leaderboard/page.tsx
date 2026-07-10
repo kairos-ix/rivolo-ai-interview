@@ -8,11 +8,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Trophy, Flame, Star, TrendingUp, Award, Users, Target,
-  Brain, Heart, Shield, Loader2, ArrowLeft, BarChart3, Crown
+  Brain, Heart, Shield, Loader2, ArrowLeft, BarChart3, Crown, Activity
 } from "lucide-react";
 import axiosInstance from "@/lib/axios";
 import Link from "next/link";
 import { computeRankLabel } from "./rankUtils";
+import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer, YAxis } from "recharts";
 
 interface GlobalEntry {
   globalRank: number;
@@ -329,6 +330,50 @@ function LeaderboardContent() {
                     </div>
                   )}
                 </Card>
+
+                {/* Rank History Chart */}
+                {myProfile.rankHistory && myProfile.rankHistory.length > 0 && (
+                  <Card className="p-5 border border-border/50 space-y-3">
+                    <h2 className="font-bold text-foreground flex items-center gap-2">
+                      <Activity className="w-5 h-5 text-primary" /> Rank History
+                    </h2>
+                    <div className="h-40 w-full mt-2">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={myProfile.rankHistory.slice().reverse()}>
+                          <XAxis 
+                            dataKey="date" 
+                            tickFormatter={(tick) => new Date(tick).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            fontSize={10} 
+                            tickMargin={8}
+                            stroke="#888888" 
+                            minTickGap={15}
+                          />
+                          <YAxis 
+                            reversed 
+                            domain={['dataMin', 'dataMax']} 
+                            fontSize={10} 
+                            stroke="#888888"
+                            tickCount={5}
+                            width={30}
+                          />
+                          <Tooltip 
+                            contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px', padding: '8px' }}
+                            labelFormatter={(label) => new Date(label).toLocaleDateString()}
+                            formatter={(value: any) => [`#${value}`, "Global Rank"]}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="globalRank" 
+                            stroke="hsl(var(--primary))" 
+                            strokeWidth={2}
+                            dot={{ r: 3, fill: "hsl(var(--primary))", strokeWidth: 0 }}
+                            activeDot={{ r: 5, fill: "hsl(var(--primary))", strokeWidth: 0 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </Card>
+                )}
 
                 {/* Category breakdown */}
                 {myProfile.categoryStats && (

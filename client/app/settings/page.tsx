@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Check, X, Shield, Trash2, Eye, EyeOff } from "lucide-react";
+import { Check, X, Shield, Trash2, Eye, EyeOff, Monitor, Smartphone, AlertTriangle, Clock, History, LogOut } from "lucide-react";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import axiosInstance from "@/lib/axios";
 
 const passwordChecks = [
   { label: "At least 8 characters", test: (pw: string) => pw.length >= 8 },
@@ -52,6 +53,53 @@ export default function SettingsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteOtp, setDeleteOtp] = useState("");
   const [isDeleteOtpSent, setIsDeleteOtpSent] = useState(false);
+
+  // ── Enterprise Security State ──
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [loginHistory, setLoginHistory] = useState<any[]>([]);
+  const [securityAlerts, setSecurityAlerts] = useState<any[]>([]);
+  const [securityLoading, setSecurityLoading] = useState(false);
+
+  useEffect(() => {
+    if (isLoggedIn && !isLoading) {
+      const fetchSecurityData = async () => {
+        setSecurityLoading(true);
+        try {
+          const [sessRes, histRes, alertsRes] = await Promise.all([
+            axiosInstance.get("/api/auth/sessions"),
+            axiosInstance.get("/api/auth/login-history"),
+            axiosInstance.get("/api/auth/security-alerts"),
+          ]);
+          setSessions(sessRes.data.sessions);
+          setLoginHistory(histRes.data.history);
+          setSecurityAlerts(alertsRes.data.alerts);
+        } catch (err) {
+          console.error("Failed to load security data", err);
+        } finally {
+          setSecurityLoading(false);
+        }
+      };
+      fetchSecurityData();
+    }
+  }, [isLoggedIn, isLoading]);
+
+  const handleRevokeSession = async (id: string) => {
+    try {
+      await axiosInstance.delete(`/api/auth/sessions/${id}`);
+      setSessions(sessions.filter((s) => s.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleRevokeAllSessions = async () => {
+    try {
+      await axiosInstance.delete("/api/auth/sessions");
+      setSessions(sessions.filter((s) => s.isCurrent));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleUpdateName = async () => {
     if (!newName || newName.trim() === user?.name) {
@@ -147,7 +195,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex-1 bg-background py-8 md:py-12 px-4">
-      <div className="max-w-xl mx-auto space-y-8">
+      <div className="max-w-3xl mx-auto space-y-8">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-foreground">Account Settings</h1>
@@ -324,6 +372,131 @@ export default function SettingsPage() {
               {pwLoading ? "Processing..." : isPasswordOtpSent ? "Confirm & Update Password" : "Update Password"}
             </Button>
           </form>
+        </Card>
+
+        {/* Security Alerts */}
+        {securityAlerts.length > 0 && (
+          <Card className="p-6 border border-amber-500/30 bg-amber-500/5">
+            <div className="flex items-center gap-2 mb-4">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              <h2 className="text-lg font-semibold text-amber-700 dark:text-amber-500">Security Alerts</h2>
+            </div>
+            <div className="space-y-3">
+              {securityAlerts.map((alert, i) => (
+                <div key={i} className="bg-background border border-amber-500/20 rounded-lg p-3 text-sm">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="font-semibold text-foreground">
+                      {alert.status === "locked" ? "Account Locked" : "Suspicious Login Attempt"}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(alert.timestamp).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="text-muted-foreground text-xs space-y-0.5">
+                    <p>Device: {alert.deviceInfo.browser} on {alert.deviceInfo.os} ({alert.deviceInfo.device})</p>
+                    <p>IP Address: {alert.ipAddress}</p>
+                    {alert.reason && <p className="text-amber-600 mt-1">Reason: {alert.reason.replace(/_/g, " ")}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Active Sessions */}
+        <Card className="p-6 border border-border/50">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Monitor className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">Active Sessions</h2>
+            </div>
+            {sessions.length > 1 && (
+              <Button size="sm" variant="outline" onClick={handleRevokeAllSessions} className="text-xs h-8">
+                Log Out All Other Devices
+              </Button>
+            )}
+          </div>
+          {securityLoading ? (
+            <div className="flex justify-center p-4"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
+          ) : sessions.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No active sessions found.</p>
+          ) : (
+            <div className="space-y-3">
+              {sessions.map((session) => (
+                <div key={session.id} className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-muted/20">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-background rounded-full border">
+                      {session.deviceInfo.device === "Mobile" ? <Smartphone className="w-4 h-4 text-muted-foreground" /> : <Monitor className="w-4 h-4 text-muted-foreground" />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        {session.deviceInfo.browser} on {session.deviceInfo.os}
+                        {session.isCurrent && <span className="text-[10px] uppercase font-bold bg-green-500/10 text-green-600 px-1.5 py-0.5 rounded-sm">Current</span>}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        IP: {session.ipAddress} · Last active: {new Date(session.lastActiveAt).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  {!session.isCurrent && (
+                    <Button size="sm" variant="ghost" onClick={() => handleRevokeSession(session.id)} className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10 px-2 h-8">
+                      <LogOut className="w-3.5 h-3.5 mr-1" /> Revoke
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* Login History */}
+        <Card className="p-6 border border-border/50">
+          <div className="flex items-center gap-2 mb-4">
+            <History className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold text-foreground">Login History</h2>
+          </div>
+          {securityLoading ? (
+            <div className="flex justify-center p-4"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
+          ) : loginHistory.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No login history available.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs text-muted-foreground uppercase bg-muted/50">
+                  <tr>
+                    <th className="px-4 py-2 rounded-l-lg">Date & Time</th>
+                    <th className="px-4 py-2">Device</th>
+                    <th className="px-4 py-2">IP Address</th>
+                    <th className="px-4 py-2 rounded-r-lg">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loginHistory.map((log, i) => (
+                    <tr key={i} className="border-b border-border/50 last:border-0">
+                      <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">
+                        {new Date(log.timestamp).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                        {log.deviceInfo.browser} ({log.deviceInfo.os})
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                        {log.ipAddress}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs font-bold rounded-full ${
+                          log.status === "success" ? "bg-green-500/10 text-green-600" :
+                          log.status === "failed" ? "bg-red-500/10 text-red-600" :
+                          "bg-amber-500/10 text-amber-600"
+                        }`}>
+                          {log.status.toUpperCase()}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Card>
 
         {/* Danger Zone */}

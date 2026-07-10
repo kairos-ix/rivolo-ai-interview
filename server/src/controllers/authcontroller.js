@@ -1,7 +1,10 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User.js");
+const Session = require("../models/Session.js");
+const LoginActivity = require("../models/LoginActivity.js");
 const Interview = require("../models/Interview.js");
 const crypto = require("crypto");
+const { parseUserAgent, getClientIP } = require("../utils/deviceParser.js");
 const { Resend } = require("resend");
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -77,11 +80,67 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const ipAddress = getClientIP(req);
+    const userAgent = req.headers["user-agent"] || "";
+    const deviceInfo = parseUserAgent(userAgent);
 
     const user = await User.findOne({ email });
-    if (!user || !(await user.comparePassword(password)))
-      return res.status(401).json({ message: "Invalid credentials" });
 
+    // Handle unknown user
+    if (!user) {
+      await LoginActivity.create({
+        email,
+        status: "failed",
+        ipAddress,
+        userAgent,
+        deviceInfo,
+        reason: "invalid_credentials",
+      });
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Check account lockout
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      const waitMinutes = Math.ceil((user.lockUntil - Date.now()) / 60000);
+      await LoginActivity.create({
+        userId: user._id,
+        email,
+        status: "locked",
+        ipAddress,
+        userAgent,
+        deviceInfo,
+        reason: "account_locked",
+      });
+      return res.status(423).json({ 
+        message: `Account locked due to multiple failed attempts. Please try again in ${waitMinutes} minute(s).` 
+      });
+    }
+
+    // Handle wrong password
+    if (!(await user.comparePassword(password))) {
+      user.failedLoginAttempts += 1;
+      let reason = "invalid_credentials";
+      
+      if (user.failedLoginAttempts >= 5) {
+        user.lockUntil = Date.now() + 15 * 60 * 1000; // 15 mins lock
+        reason = "account_locked_due_to_max_failures";
+      }
+      
+      await user.save();
+      await LoginActivity.create({
+        userId: user._id,
+        email,
+        status: "failed",
+        ipAddress,
+        userAgent,
+        deviceInfo,
+        reason,
+      });
+
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Handle unverified email
     if (!user.isVerified) {
       return res.status(403).json({ 
         message: "Please verify your email address before logging in.", 
@@ -90,7 +149,72 @@ const login = async (req, res) => {
       });
     }
 
+    // Successful login -> Reset lock counters
+    user.failedLoginAttempts = 0;
+    user.lockUntil = undefined;
+    await user.save();
+
+    // Detect suspicious login (new IP or new Device type compared to last 5 logins)
+    const recentLogins = await LoginActivity.find({ userId: user._id, status: "success" })
+      .sort({ timestamp: -1 })
+      .limit(5);
+    
+    let isSuspicious = false;
+    if (recentLogins.length > 0) {
+      const knownIps = recentLogins.map(l => l.ipAddress);
+      const knownDevices = recentLogins.map(l => l.deviceInfo.device);
+      if (!knownIps.includes(ipAddress) && !knownDevices.includes(deviceInfo.device)) {
+        isSuspicious = true;
+      }
+    }
+
+    // Log the activity
+    await LoginActivity.create({
+      userId: user._id,
+      email,
+      status: isSuspicious ? "suspicious" : "success",
+      ipAddress,
+      userAgent,
+      deviceInfo,
+      reason: isSuspicious ? "unrecognized_device_and_ip" : "",
+    });
+
+    // Generate JWT token
     const token = signToken(user._id.toString());
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    // Revoke all other sessions to prevent duplicate sessions from multiple devices (disabled to allow manual management in UI)
+    // await Session.updateMany({ userId: user._id, isRevoked: false }, { isRevoked: true });
+
+    // Create session record
+    await Session.create({
+      userId: user._id,
+      tokenHash,
+      deviceInfo,
+      ipAddress,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days (matches jwt expiry)
+    });
+
+    // Send security alert if suspicious
+    if (isSuspicious) {
+      resend.emails.send({
+        from: 'noreply@sahilmauryadev.com',
+        to: user.email,
+        subject: "Security Alert: New Login Detected",
+        text: `We detected a new login from ${deviceInfo.browser} on ${deviceInfo.os}. IP: ${ipAddress}`,
+        html: `
+          <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; border: 1px solid #e5e7eb; border-radius: 12px;">
+            <h2 style="color: #111827; margin-top: 0;">New Login Detected</h2>
+            <p style="color: #4b5563;">We noticed a new login to your Rivolo account from an unrecognized device or location.</p>
+            <div style="background-color: #fef2f2; padding: 16px; border-radius: 8px; margin: 24px 0; border: 1px solid #fecaca;">
+              <p style="margin: 0 0 8px 0; color: #991b1b;"><strong>Device:</strong> ${deviceInfo.browser} on ${deviceInfo.os} (${deviceInfo.device})</p>
+              <p style="margin: 0; color: #991b1b;"><strong>IP Address:</strong> ${ipAddress}</p>
+            </div>
+            <p style="color: #4b5563; font-size: 14px;">If this was you, you can ignore this email. If you don't recognize this activity, please log in and change your password immediately.</p>
+          </div>
+        `,
+      }).catch(err => console.error("Failed to send security alert:", err));
+    }
 
     res.json({
       token,
@@ -119,6 +243,32 @@ const verifyEmail = async (req, res) => {
     await user.save();
 
     const token = signToken(user._id.toString());
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const ipAddress = getClientIP(req);
+    const userAgent = req.headers["user-agent"] || "";
+    const deviceInfo = parseUserAgent(userAgent);
+
+    // Create session record
+    await Session.create({
+      userId: user._id,
+      tokenHash,
+      deviceInfo,
+      ipAddress,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days (matches jwt expiry)
+    });
+
+    // Log the activity
+    await LoginActivity.create({
+      userId: user._id,
+      email: user.email,
+      status: "success",
+      ipAddress,
+      userAgent,
+      deviceInfo,
+      reason: "first_login_after_verification",
+    });
+
     res.json({
       message: "Email verified successfully",
       token,
@@ -330,12 +480,32 @@ const changePassword = async (req, res) => {
       return res.status(400).json({ message: "New password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character." });
     }
 
+    // Enterprise Security: Password History Check
+    const bcrypt = require("bcryptjs");
+    if (user.previousPasswords && user.previousPasswords.length > 0) {
+      for (const oldHash of user.previousPasswords) {
+        if (await bcrypt.compare(newPassword, oldHash)) {
+          return res.status(400).json({ message: "You cannot reuse any of your last 3 passwords." });
+        }
+      }
+    }
+
+    // Save old password to history
+    user.previousPasswords.unshift(user.password);
+    if (user.previousPasswords.length > 3) {
+      user.previousPasswords = user.previousPasswords.slice(0, 3);
+    }
+
     user.password = newPassword;
+    user.passwordChangedAt = Date.now();
     user.actionOTP = undefined;
     user.actionOTPExpires = undefined;
     await user.save();
+
+    // Revoke all existing sessions so user has to log in again on all devices
+    await Session.updateMany({ userId: user._id }, { isRevoked: true });
     
-    res.json({ message: "Password updated successfully" });
+    res.json({ message: "Password updated successfully. All other devices have been logged out." });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }
@@ -358,6 +528,8 @@ const deleteAccount = async (req, res) => {
     }
 
     await Interview.deleteMany({ userId: req.userId });
+    await Session.deleteMany({ userId: req.userId });
+    await LoginActivity.deleteMany({ userId: req.userId });
     await User.findByIdAndDelete(req.userId);
 
     res.json({ message: "Account deleted successfully" });
@@ -385,6 +557,90 @@ const updateName = async (req, res) => {
   }
 };
 
+// ── Enterprise Security Endpoints ─────────────────────────────────────────
+
+const getLoginHistory = async (req, res) => {
+  try {
+    const history = await LoginActivity.find({ userId: req.userId })
+      .sort({ timestamp: -1 })
+      .limit(20);
+    res.json({ history });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+const getActiveSessions = async (req, res) => {
+  try {
+    const sessions = await Session.find({ userId: req.userId, isRevoked: false })
+      .sort({ lastActiveAt: -1 });
+    
+    // Mark current session
+    const currentSessionId = req.sessionId ? req.sessionId.toString() : null;
+    
+    const formattedSessions = sessions.map(s => ({
+      id: s._id,
+      deviceInfo: s.deviceInfo,
+      ipAddress: s.ipAddress,
+      lastActiveAt: s.lastActiveAt,
+      createdAt: s.createdAt,
+      isCurrent: s._id.toString() === currentSessionId
+    }));
+
+    res.json({ sessions: formattedSessions });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+const revokeSession = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const session = await Session.findOne({ _id: id, userId: req.userId });
+    if (!session) {
+      return res.status(404).json({ message: "Session not found" });
+    }
+    
+    session.isRevoked = true;
+    await session.save();
+    
+    res.json({ message: "Session revoked successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+const revokeAllSessions = async (req, res) => {
+  try {
+    const currentSessionId = req.sessionId;
+    
+    // Revoke all EXCEPT current session
+    await Session.updateMany(
+      { userId: req.userId, _id: { $ne: currentSessionId }, isRevoked: false },
+      { isRevoked: true }
+    );
+    
+    res.json({ message: "All other sessions revoked successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+const getSecurityAlerts = async (req, res) => {
+  try {
+    const alerts = await LoginActivity.find({ 
+      userId: req.userId, 
+      status: { $in: ["locked", "suspicious"] } 
+    })
+      .sort({ timestamp: -1 })
+      .limit(10);
+      
+    res.json({ alerts });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -396,5 +652,10 @@ module.exports = {
   verifyEmail,
   resendOTP,
   sendActionOTP,
-  updateName
+  updateName,
+  getLoginHistory,
+  getActiveSessions,
+  revokeSession,
+  revokeAllSessions,
+  getSecurityAlerts
 };

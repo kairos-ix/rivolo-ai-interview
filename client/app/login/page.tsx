@@ -62,8 +62,13 @@ const LoginPage = () => {
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-destructive/10 text-destructive rounded-lg text-sm border border-destructive/20">
-              {error}
+            <div className={`mb-6 p-4 rounded-lg text-sm border flex items-start gap-3 ${error.includes("locked") ? "bg-amber-500/10 text-amber-700 border-amber-500/20" : "bg-destructive/10 text-destructive border-destructive/20"}`}>
+              {error.includes("locked") ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+              )}
+              <div>{error}</div>
             </div>
           )}
 

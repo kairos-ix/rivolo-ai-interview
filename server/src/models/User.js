@@ -23,6 +23,14 @@ const userSchema = new mongoose.Schema({
   actionOTPExpires: Date,
   resetPasswordToken: String,
   resetPasswordExpires: Date,
+  
+  // Security: Account lockout
+  failedLoginAttempts: { type: Number, default: 0 },
+  lockUntil: { type: Date, default: null },
+
+  // Security: Password policy
+  passwordChangedAt: { type: Date, default: Date.now },
+  previousPasswords: [{ type: String }],
 });
 
 userSchema.pre("save", async function (next) {
