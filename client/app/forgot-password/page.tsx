@@ -25,7 +25,7 @@ export default function ForgotPasswordPage() {
     setMessage("");
 
     try {
-      const response = await api.post("/auth/forgot-password", { email });
+      const response = await api.post("/api/auth/forgot-password", { email });
       setStatus("idle");
       setStep("otp");
     } catch (error: any) {
@@ -54,7 +54,7 @@ export default function ForgotPasswordPage() {
     setMessage("");
 
     try {
-      await api.post("/auth/reset-password", { 
+      await api.post("/api/auth/reset-password", { 
         email,
         otp: otpValue,
         password 
