@@ -45,8 +45,13 @@ export function Navbar() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  // mounted guards against hydration mismatches: auth state is unknown during SSR
+  // so we always render the public nav on first paint, then swap after mount.
+  const [mounted, setMounted] = useState(false);
   const toolsRef = useRef<HTMLDivElement>(null);
   const userRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -84,6 +89,8 @@ export function Navbar() {
   };
 
   const isActive = (path: string) => pathname === path;
+  // Use auth state only after client mount to avoid hydration mismatch
+  const effectiveLoggedIn = mounted && isLoggedIn;
   const isToolActive = toolLinks.some((t) => isActive(t.href));
 
   const initial = user?.name?.charAt(0).toUpperCase() ?? "U";
@@ -110,7 +117,7 @@ export function Navbar() {
 
             {/* ── Desktop Center Nav ── */}
             <div className="hidden md:flex items-center gap-0.5">
-              {isLoggedIn ? (
+              {effectiveLoggedIn ? (
                 <>
                   {/* Primary links */}
                   {primaryLinks
@@ -199,7 +206,7 @@ export function Navbar() {
 
             {/* ── Desktop Right Controls ── */}
             <div className="hidden md:flex items-center gap-2">
-              {isLoggedIn ? (
+              {effectiveLoggedIn ? (
                 // User avatar dropdown
                 <div ref={userRef} className="relative">
                   <button
@@ -284,7 +291,7 @@ export function Navbar() {
         {/* ── Mobile Menu Panel ── */}
         <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${mobileOpen ? "max-h-[100dvh] opacity-100" : "max-h-0 opacity-0"}`}>
           <div className="bg-background/95 backdrop-blur-xl border-t border-border/50 px-4 py-4 space-y-1">
-            {isLoggedIn ? (
+            {effectiveLoggedIn ? (
               <>
                 {/* User info */}
                 <div className="flex items-center gap-3 px-3 py-3 mb-2 bg-muted/30 rounded-xl">
