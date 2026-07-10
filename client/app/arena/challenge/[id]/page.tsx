@@ -74,6 +74,7 @@ export default function ChallengePage() {
   const [phase, setPhase] = useState<"taking" | "results">("taking");
   const [resultEntry, setResultEntry] = useState<any>(null);
   const [newBadges, setNewBadges] = useState<any[]>([]);
+  const [showBadgeToast, setShowBadgeToast] = useState(false);
 
   // Timer
   const startTimeRef = useRef(Date.now());
@@ -132,7 +133,12 @@ export default function ChallengePage() {
         timeTakenSeconds,
       });
       setResultEntry(res.data.entry);
-      setNewBadges(res.data.newBadges || []);
+      const badges = res.data.newBadges || [];
+      setNewBadges(badges);
+      if (badges.length > 0) {
+        setTimeout(() => setShowBadgeToast(true), 800);
+        setTimeout(() => setShowBadgeToast(false), 5000);
+      }
       setPhase("results");
     } catch (err: any) {
       if (err?.response?.status === 409) {
@@ -196,8 +202,35 @@ export default function ChallengePage() {
     const scoreColor = totalScore >= 80 ? "text-green-500" : totalScore >= 60 ? "text-amber-500" : "text-red-500";
 
     return (
-      <div className="min-h-screen bg-background pt-24 pb-16 px-4 sm:px-6">
-        <div className="max-w-2xl mx-auto space-y-6">
+      <>
+        {/* ── Floating Badge Toast ───────────────────────────── */}
+        <AnimatePresence>
+          {showBadgeToast && newBadges.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 60, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 40, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="fixed bottom-6 right-6 z-[100] bg-background/95 backdrop-blur-lg border border-amber-500/30 shadow-2xl rounded-2xl p-4 max-w-[300px]"
+            >
+              <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-2">🎉 Badge{newBadges.length > 1 ? "s" : ""} Earned!</p>
+              <div className="flex flex-col gap-2">
+                {newBadges.map((b) => (
+                  <div key={b.id} className="flex items-center gap-2">
+                    <span className="text-xl">{b.emoji}</span>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">{b.name}</p>
+                      <p className="text-xs text-muted-foreground">{b.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="min-h-screen bg-background pt-24 pb-16 px-4 sm:px-6">
+          <div className="max-w-2xl mx-auto space-y-6">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="p-8 text-center border border-border/50 space-y-4">
               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: "spring" }}>
@@ -286,7 +319,8 @@ export default function ChallengePage() {
             <Link href={`/arena/leaderboard?challenge=${challengeId}`}><Button className="rounded-full">View Leaderboard →</Button></Link>
           </div>
         </div>
-      </div>
+        </div>
+      </>
     );
   }
 
