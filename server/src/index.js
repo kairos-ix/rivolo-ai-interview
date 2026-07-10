@@ -5,6 +5,8 @@ const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
 const mongoSanitize = require("express-mongo-sanitize");
+const xss = require("xss-clean");
+const hpp = require("hpp");
 const connectDB = require("./config/db.js");
 const authRoutes = require("./routes/auth.js");
 const interviewRoutes = require("./routes/interview.js");
@@ -65,6 +67,14 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+// XSS sanitization - clean user input
+app.use(xss());
+
+// Protect against HTTP Parameter Pollution attacks
+app.use(hpp({
+  whitelist: ['page', 'limit', 'sort', 'domain', 'difficulty']
+}));
 
 // ── Rate Limiters ─────────────────────────────────────────
 // Trust first proxy to allow rate limiter to work behind Render/Vercel

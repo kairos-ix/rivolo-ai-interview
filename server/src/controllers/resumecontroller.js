@@ -1,5 +1,5 @@
 const Groq = require("groq-sdk");
-const pdfjslib=require("pdfjs-dist/legacy/build/pdf.js");
+const pdfjslib = require("pdfjs-dist/legacy/build/pdf.mjs");
 const { groqRetry } = require("../utils/groqRetry.js");
 
 const groq = new Groq({
