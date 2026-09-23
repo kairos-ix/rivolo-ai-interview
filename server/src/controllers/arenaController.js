@@ -1,12 +1,9 @@
-const Groq = require("groq-sdk");
 const Challenge = require("../models/Challenge.js");
 const ChallengeEntry = require("../models/ChallengeEntry.js");
 const UserArenaProfile = require("../models/UserArenaProfile.js");
 const User = require("../models/User.js");
-const { groqRetry } = require("../utils/groqRetry.js");
+const { callGroq, parseJsonResponse } = require("../utils/groqClient.js");
 const { computeNewBadges, computeRankLabel } = require("../utils/badgeEngine.js");
-
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -96,25 +93,22 @@ Return ONLY valid JSON in this exact format:
   ]
 }`;
 
-  const response = await groqRetry(() =>
-    groq.chat.completions.create({
-      model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert interview challenge designer. Return ONLY valid JSON, no markdown fences.",
-        },
-        { role: "user", content: prompt },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.9,
-      max_tokens: 800,
-    })
-  );
+  const response = await callGroq({
+    messages: [
+      {
+        role: "system",
+        content: "You are an expert interview challenge designer. Return ONLY valid JSON, no markdown fences.",
+      },
+      { role: "user", content: prompt },
+    ],
+    response_format: { type: "json_object" },
+    temperature: 0.8,
+    max_tokens: 800,
+  });
 
   let parsed;
   try {
-    parsed = JSON.parse(response.choices[0].message.content.trim());
+    parsed = parseJsonResponse(response.choices[0].message.content);
   } catch (e) {
     console.error(`Failed to parse AI response for ${category} ${type} challenge`);
     return;
@@ -237,13 +231,20 @@ const submitChallenge = async (req, res) => {
       return res.status(404).json({ message: "Challenge not found or expired." });
     }
 
-    // Prevent double submission
+    // Prevent double submission unless previous submission suffered an evaluation error
     const existing = await ChallengeEntry.findOne({
       userId: req.userId,
       challengeId,
     });
     if (existing) {
-      return res.status(409).json({ message: "You have already completed this challenge.", entry: existing });
+      const hadEvalError =
+        existing.answers.length > 0 &&
+        existing.answers.every((a) => a.aiFeedback === "Could not evaluate this answer." || a.score === 0);
+      if (hadEvalError) {
+        await ChallengeEntry.findByIdAndDelete(existing._id);
+      } else {
+        return res.status(409).json({ message: "You have already completed this challenge.", entry: existing });
+      }
     }
 
     // Score each answer with Groq AI
@@ -284,21 +285,20 @@ Scoring guide:
 
       let scored = { score: 0, feedback: "Could not evaluate this answer." };
       try {
-        const scoreResp = await groqRetry(() =>
-          groq.chat.completions.create({
-            model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
-            messages: [
-              { role: "system", content: "You are a strict but fair interview evaluator. Return ONLY valid JSON." },
-              { role: "user", content: scoringPrompt },
-            ],
-            response_format: { type: "json_object" },
-            temperature: 0.3,
-            max_tokens: 300,
-          })
-        );
-        const parsed = JSON.parse(scoreResp.choices[0].message.content.trim());
-        scored.score = Math.min(100, Math.max(0, Math.round(parsed.score || 0)));
-        scored.feedback = parsed.feedback || "Evaluated.";
+        const scoreResp = await callGroq({
+          messages: [
+            { role: "system", content: "You are a strict but fair interview evaluator. Return ONLY valid JSON." },
+            { role: "user", content: scoringPrompt },
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.3,
+          max_tokens: 600,
+        });
+        const parsed = parseJsonResponse(scoreResp.choices[0].message.content);
+        if (parsed && typeof parsed.score === "number") {
+          scored.score = Math.min(100, Math.max(0, Math.round(parsed.score)));
+          scored.feedback = parsed.feedback || "Evaluated.";
+        }
       } catch (e) {
         console.error(`Scoring error for Q${i}:`, e.message);
       }

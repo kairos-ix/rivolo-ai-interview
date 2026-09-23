@@ -1,12 +1,7 @@
-const Groq = require("groq-sdk");
 const RecruiterSession = require("../models/RecruiterSession.js");
 const COMPANY_PROFILES = require("../config/companyProfiles.js");
-const { groqRetry } = require("../utils/groqRetry.js");
+const { callGroq, parseJsonResponse } = require("../utils/groqClient.js");
 const { computeNextDifficulty, hashText, isRepeatedAnswer } = require("../utils/adaptiveEngine.js");
-
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
 
 // ── Start Session ───────────────────────────────────────
 const startSession = async (req, res) => {
@@ -31,22 +26,19 @@ Generate the first interview question. Return ONLY JSON:
 {"question": "string", "category": "string", "difficulty": "string", "hint": "string"}
 No markdown. No explanation.`;
 
-    const response = await groqRetry(() =>
-      groq.chat.completions.create({
-        model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
-        messages: [
-          { role: "system", content: "You are an AI interviewer simulator. You must output exactly valid JSON, no backticks, no markdown formatting." },
-          { role: "user", content: prompt },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.7,
-        max_tokens: 300,
-      })
-    );
+    const response = await callGroq({
+      messages: [
+        { role: "system", content: "You are an AI interviewer simulator. You must output exactly valid JSON, no backticks, no markdown formatting." },
+        { role: "user", content: prompt },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.7,
+      max_tokens: 600,
+    });
 
     let parsed;
     try {
-      parsed = JSON.parse(response.choices[0].message.content.trim());
+      parsed = parseJsonResponse(response.choices[0].message.content);
     } catch (e) {
       console.error("Parse error startSession:", e);
       return res.status(500).json({ message: "Failed to parse AI question." });
@@ -142,22 +134,19 @@ Return ONLY JSON:
 
 Score according to ${company.name}'s bar (passingBar: ${company.passingBar}). Be specific about whether this answer would pass at ${company.name}.`;
 
-      const response = await groqRetry(() =>
-        groq.chat.completions.create({
-          model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
-          messages: [
-            { role: "system", content: "You evaluate answers. Return ONLY JSON without formatting fences." },
-            { role: "user", content: prompt },
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.7,
-          max_tokens: 500,
-        })
-      );
+      const response = await callGroq({
+        messages: [
+          { role: "system", content: "You evaluate answers. Return ONLY JSON without formatting fences." },
+          { role: "user", content: prompt },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.7,
+        max_tokens: 600,
+      });
 
       let parsed;
       try {
-        parsed = JSON.parse(response.choices[0].message.content.trim());
+        parsed = parseJsonResponse(response.choices[0].message.content);
       } catch (e) {
         console.error("Parse eval error:", e);
         return res.status(500).json({ message: "Failed to evaluate answer." });
@@ -213,16 +202,13 @@ Write a 3-paragraph hiring verdict as if this is real ${company.name} feedback.
 Mention specific ${company.name} values/standards. State clearly: selected / not selected / on hold.
 Return plain text, no JSON.`;
 
-      const finalResponse = await groqRetry(() =>
-        groq.chat.completions.create({
-          model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
-          messages: [
-            { role: "user", content: finalPrompt }
-          ],
-          temperature: 0.7,
-          max_tokens: 500,
-        })
-      );
+      const finalResponse = await callGroq({
+        messages: [
+          { role: "user", content: finalPrompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 600,
+      });
 
       session.companyFeedback = finalResponse.choices[0].message.content.trim();
       await session.save();
@@ -266,22 +252,19 @@ Return ONLY JSON:
 {"question":"string","category":"string","difficulty":"string","hint":"string"}
 No markdown. No explanation.`;
 
-    const nextResponse = await groqRetry(() =>
-      groq.chat.completions.create({
-        model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
-        messages: [
-          { role: "system", content: "Return ONLY JSON without markdown formatting." },
-          { role: "user", content: nextQPrompt },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.8,
-        max_tokens: 300,
-      })
-    );
+    const nextResponse = await callGroq({
+      messages: [
+        { role: "system", content: "Return ONLY JSON without markdown formatting." },
+        { role: "user", content: nextQPrompt },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.8,
+      max_tokens: 600,
+    });
 
     let nextParsed;
     try {
-      nextParsed = JSON.parse(nextResponse.choices[0].message.content.trim());
+      nextParsed = parseJsonResponse(nextResponse.choices[0].message.content);
     } catch (e) {
       console.error("Parse next Q error:", e);
       return res.status(500).json({ message: "Failed to generate next question." });

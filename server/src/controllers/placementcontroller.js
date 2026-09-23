@@ -1,11 +1,6 @@
-const Groq = require("groq-sdk");
 const Interview = require("../models/Interview.js");
 const PlacementReadiness = require("../models/PlacementReadiness.js");
-const { groqRetry } = require("../utils/groqRetry.js");
-
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+const { callGroq, parseJsonResponse } = require("../utils/groqClient.js");
 
 // ── Generate Readiness ────────────────────────────────────
 const generateReadiness = async (req, res) => {
@@ -92,23 +87,20 @@ Resume snapshot: No resume data available
 
 Tailor roadmap for ${type}. Max 5 items per array. Be specific, not generic.`;
 
-    const response = await groqRetry(() =>
-      groq.chat.completions.create({
-        model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
-        messages: [
-          { role: "system", content: "You are a placement readiness analysis engine. Return ONLY valid JSON." },
-          { role: "user", content: prompt },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.7,
-        max_tokens: 1000,
-      })
-    );
+    const response = await callGroq({
+      messages: [
+        { role: "system", content: "You are a placement readiness analysis engine. Return ONLY valid JSON." },
+        { role: "user", content: prompt },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.7,
+      max_tokens: 1000,
+    });
 
     // 9. Parse JSON safely
     let parsed;
     try {
-      parsed = JSON.parse(response.choices[0].message.content.trim());
+      parsed = parseJsonResponse(response.choices[0].message.content);
     } catch (parseErr) {
       console.error("Failed to parse Groq placement response:", parseErr);
       return res.status(500).json({ message: "AI returned an invalid response. Please try again." });

@@ -1,6 +1,5 @@
-const Groq = require("groq-sdk");
 const Interview = require("../models/Interview.js");
-const { groqRetry } = require("../utils/groqRetry.js");
+const { callGroq, parseJsonResponse } = require("../utils/groqClient.js");
 const {
   computeNextDifficulty,
   hashText,
@@ -8,10 +7,6 @@ const {
   isRepeatedAnswer,
   generateProgressionReport
 } = require("../utils/adaptiveEngine.js");
-
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
 
 const systemPrompt = (domain, difficulty) =>
   `
@@ -32,20 +27,17 @@ const startInterview = async (req, res) => {
 
     const currentDifficulty = "medium";
 
-    const completion = await groqRetry(() =>
-      groq.chat.completions.create({
-        model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
-        messages: [
-          { role: "system", content: systemPrompt(domain, currentDifficulty) },
-          {
-            role: "user",
-            content: `Start the interview. Ask me the first ${domain} technical question at a ${currentDifficulty.toUpperCase()} difficulty level. Only ask the question, no preamble.`,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 200,
-      })
-    );
+    const completion = await callGroq({
+      messages: [
+        { role: "system", content: systemPrompt(domain, currentDifficulty) },
+        {
+          role: "user",
+          content: `Start the interview. Ask me the first ${domain} technical question at a ${currentDifficulty.toUpperCase()} difficulty level. Only ask the question, no preamble.`,
+        },
+      ],
+      temperature: 0.7,
+      max_tokens: 600,
+    });
 
     const firstQuestion =
       completion.choices[0].message.content ||
@@ -115,13 +107,11 @@ const submitAnswer = async (req, res) => {
     }
 
     // 1️⃣ Generate feedback on the answer
-    const feedbackResponse = await groqRetry(() =>
-      groq.chat.completions.create({
-        model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
-        messages: [
-          {
-            role: "system",
-            content: `You are Rivolo, a friendly and experienced technical interviewer created by Sahil (kairos).
+    const feedbackResponse = await callGroq({
+      messages: [
+        {
+          role: "system",
+          content: `You are Rivolo, a friendly and experienced technical interviewer created by Sahil (kairos).
 You are evaluating an answer for a ${domain} developer role to a ${interview.currentDifficulty.toUpperCase()} difficulty question.
 Your tone should be human, conversational, encouraging, and natural.
 
@@ -137,21 +127,20 @@ You MUST respond in JSON format with these exact keys:
 - "scoreOutOf10": A number from 0 to 10 rating the answer (0 if skipped or totally wrong, 10 for perfect).
 - "isSkipped": boolean. True ONLY if the candidate explicitly skipped, said "I don't know", or didn't attempt the technical aspect.
 - "isEndRequested": boolean. True ONLY if the candidate explicitly wants to end or stop the interview right now.`
-          },
-          {
-            role: "user",
-            content: `Question asked: "${currentQuestion}"\nCandidate's Answer: "${answer}"\nIs this a repeated/lazy answer? ${isRepeated ? 'Yes' : 'No'}`
-          }
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.7,
-        max_tokens: 800,
-      })
-    );
+        },
+        {
+          role: "user",
+          content: `Question asked: "${currentQuestion}"\nCandidate's Answer: "${answer}"\nIs this a repeated/lazy answer? ${isRepeated ? 'Yes' : 'No'}`
+        }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.7,
+      max_tokens: 800,
+    });
 
     let parsed;
     try {
-      parsed = JSON.parse(feedbackResponse.choices[0].message.content.trim());
+      parsed = parseJsonResponse(feedbackResponse.choices[0].message.content);
     } catch (e) {
       parsed = { feedback: "Thank you for your response.", scoreOutOf10: 5, isSkipped: false, isEndRequested: false };
     }
@@ -276,17 +265,15 @@ You MUST respond in JSON format with these exact keys:
     let retries = 0;
     
     while (retries < 3) {
-        const nextQuestionResponse = await groqRetry(() =>
-          groq.chat.completions.create({
-            model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
-            messages: [
-              {
-                role: "system",
-                content: `You are Rivolo, an expert ${domain} interviewer. Generate the NEXT interview question.`
-              },
-              {
-                role: "user",
-                content: `The candidate's current difficulty level is ${nextDifficulty.toUpperCase()}.
+        const nextQuestionResponse = await callGroq({
+          messages: [
+            {
+              role: "system",
+              content: `You are Rivolo, an expert ${domain} interviewer. Generate the NEXT interview question.`
+            },
+            {
+              role: "user",
+              content: `The candidate's current difficulty level is ${nextDifficulty.toUpperCase()}.
 Their performance on the last question was: ${scoreAwarded >= 7 ? "STRONG" : scoreAwarded < 5 ? "WEAK/SKIPPED" : "AVERAGE"}.
 Last Question Asked: "${currentQuestion}"
 
@@ -300,12 +287,11 @@ Previous questions already asked (DO NOT REPEAT):
 - ${previousQuestions}
 
 Return ONLY the new question, nothing else.`,
-              },
-            ],
-            temperature: 0.8 + (retries * 0.1),
-            max_tokens: 150,
-          })
-        );
+            },
+          ],
+          temperature: 0.8 + (retries * 0.1),
+          max_tokens: 600,
+        });
         
         nextQuestion = nextQuestionResponse.choices[0].message.content.trim();
         if (!isDuplicateQuestion(nextQuestion, interview.questionHashes)) {
