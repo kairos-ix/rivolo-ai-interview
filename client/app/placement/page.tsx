@@ -71,11 +71,16 @@ export default function PlacementPage() {
   const [savingConfig, setSavingConfig] = useState(false);
   const [configError, setConfigError] = useState("");
   const [generateError, setGenerateError] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
 
   // Scoring config local state
   const [iw, setIw] = useState(50);
   const [rw, setRw] = useState(30);
   const [sw, setSw] = useState(20);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const fetchReadiness = useCallback(async () => {
     try {
@@ -424,20 +429,24 @@ export default function PlacementPage() {
               <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Weak Areas</h3>
             </div>
             {weakAreaChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={weakAreaChartData} layout="vertical" margin={{ left: 0, right: 10 }}>
-                  <XAxis type="number" domain={[0, 100]} hide />
-                  <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                  <RechartsTooltip
-                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }}
-                  />
-                  <Bar dataKey="score" radius={[0, 6, 6, 0]} barSize={16}>
-                    {weakAreaChartData.map((_, i) => (
-                      <Cell key={i} fill={barColors[i % barColors.length]} fillOpacity={0.8} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              isMounted ? (
+                <ResponsiveContainer width="100%" height={180}>
+                  <BarChart data={weakAreaChartData} layout="vertical" margin={{ left: 0, right: 10 }}>
+                    <XAxis type="number" domain={[0, 100]} hide />
+                    <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                    <RechartsTooltip
+                      contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }}
+                    />
+                    <Bar dataKey="score" radius={[0, 6, 6, 0]} barSize={16}>
+                      {weakAreaChartData.map((_, i) => (
+                        <Cell key={i} fill={barColors[i % barColors.length]} fillOpacity={0.8} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[180px] bg-muted/30 rounded-xl animate-pulse" />
+              )
             ) : (
               <p className="text-sm text-muted-foreground">No weak areas identified.</p>
             )}
@@ -531,17 +540,21 @@ export default function PlacementPage() {
                 <TrendingUp className="w-4 h-4 text-primary" />
                 Score History
               </h3>
-              <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={historyChartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                  <RechartsTooltip
-                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }}
-                  />
-                  <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 4, fill: "hsl(var(--primary))" }} />
-                </LineChart>
-              </ResponsiveContainer>
+              {isMounted ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <LineChart data={historyChartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                    <RechartsTooltip
+                      contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }}
+                    />
+                    <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 4, fill: "hsl(var(--primary))" }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[220px] bg-muted/30 rounded-xl animate-pulse" />
+              )}
             </Card>
           </motion.div>
         )}

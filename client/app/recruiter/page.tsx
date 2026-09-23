@@ -43,6 +43,12 @@ const RecruiterSelectionPage = () => {
   const router = useRouter();
   const [candidateType, setCandidateType] = useState("fresher");
   const [loadingCompany, setLoadingCompany] = useState<string | null>(null);
+  const [startError, setStartError] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !isLoggedIn) {
@@ -71,6 +77,7 @@ const RecruiterSelectionPage = () => {
   const handleStart = async (companyId: string) => {
     try {
       setLoadingCompany(companyId);
+      setStartError(null);
       const res = await axiosInstance.post("/api/recruiter/start", {
         companyId,
         candidateType
@@ -78,7 +85,7 @@ const RecruiterSelectionPage = () => {
       router.push(`/recruiter/interview/${res.data.sessionId}`);
     } catch (err: any) {
       console.error(err);
-      alert(err?.response?.data?.message || "Failed to start session.");
+      setStartError(err?.response?.data?.message || "Failed to start recruiter session. Please try again.");
       setLoadingCompany(null);
     }
   };
@@ -163,6 +170,18 @@ const RecruiterSelectionPage = () => {
             ))}
           </div>
         </div>
+
+        {/* Error banner */}
+        {isMounted && startError && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-destructive/10 text-destructive border border-destructive/20 rounded-xl px-4 py-3 text-sm flex items-center justify-between gap-3"
+          >
+            <span>{startError}</span>
+            <button onClick={() => setStartError(null)} className="text-destructive/60 hover:text-destructive font-medium text-xs shrink-0">Dismiss</button>
+          </motion.div>
+        )}
 
         {/* Company Grid */}
         <motion.div 
