@@ -81,6 +81,10 @@ export default function PlacementPage() {
     try {
       setLoading(true);
       const { data: res } = await axiosInstance.get("/api/placement");
+      if (!res) {
+        setData(null);
+        return;
+      }
       setData(res);
       setCandidateType(res.candidateType || "fresher");
       setIw(res.scoringConfig?.interviewWeight ?? 50);

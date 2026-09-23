@@ -152,7 +152,7 @@ const getReadiness = async (req, res) => {
   try {
     const doc = await PlacementReadiness.findOne({ userId: req.userId }).lean();
     if (!doc) {
-      return res.status(404).json({ message: "No placement readiness data found. Generate one first." });
+      return res.status(200).json(null);
     }
     return res.json(doc);
   } catch (err) {
