@@ -42,7 +42,7 @@ const register = async (req, res) => {
     await user.save();
 
     const { error } = await resend.emails.send({
-      from: 'noreply@sahilmauryadev.com',
+      from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
       to: user.email,
       subject: "Verify Your Email Address",
       text: `Your verification code is: ${otp}\n\nIt expires in 5 minutes.`,
@@ -215,7 +215,7 @@ const login = async (req, res) => {
     // Send security alert if suspicious
     if (isSuspicious) {
       resend.emails.send({
-        from: 'noreply@sahilmauryadev.com',
+        from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
         to: user.email,
         subject: "Security Alert: New Login Detected",
         text: `We detected a new login from ${deviceInfo.browser} on ${deviceInfo.os}. IP: ${ipAddress}`,
@@ -311,7 +311,7 @@ const resendOTP = async (req, res) => {
     await user.save();
 
     const { error } = await resend.emails.send({
-      from: 'noreply@sahilmauryadev.com',
+      from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
       to: user.email,
       subject: "Verify Your Email Address (Resend)",
       text: `Your new verification code is: ${otp}\n\nIt expires in 5 minutes.`,
@@ -371,13 +371,9 @@ const forgotPassword = async (req, res) => {
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const hashedOTP = crypto.createHash("sha256").update(otp).digest("hex");
-    
-    user.resetPasswordToken = hashedOTP;
-    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 mins
-    await user.save();
 
-    const { error } = await resend.emails.send({
-      from: 'noreply@sahilmauryadev.com',
+    const { data, error } = await resend.emails.send({
+      from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
       to: user.email,
       subject: "Password Reset Code",
       text: `Your password reset code is ${otp}. It will expire in 15 minutes.`,
@@ -399,13 +395,20 @@ const forgotPassword = async (req, res) => {
     });
 
     if (error) {
-      throw new Error(error.message);
+      console.error("[Resend] forgot-password email failed:", error.statusCode, error.message);
+      return res.status(500).json({ message: "Failed to send reset email. Please try again later." });
     }
+
+    // Only persist the OTP after confirming email was sent successfully
+    user.resetPasswordToken = hashedOTP;
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 mins
+    await user.save();
     
     res.status(200).json({ 
       message: "If an account with that email exists, a verification code has been sent."
     });
   } catch (err) {
+    console.error("[forgotPassword] Unexpected error:", err.message);
     res.status(500).json({ message: "Error sending email", error: err.message });
   }
 };
@@ -457,7 +460,7 @@ const sendActionOTP = async (req, res) => {
     await user.save();
 
     const { error } = await resend.emails.send({
-      from: 'noreply@sahilmauryadev.com',
+      from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
       to: user.email,
       subject: "Action Authorization Code",
       text: `Your authorization code is: ${otp}\n\nIt expires in 5 minutes.`,

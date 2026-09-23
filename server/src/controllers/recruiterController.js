@@ -33,7 +33,7 @@ No markdown. No explanation.`;
 
     const response = await groqRetry(() =>
       groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
         messages: [
           { role: "system", content: "You are an AI interviewer simulator. You must output exactly valid JSON, no backticks, no markdown formatting." },
           { role: "user", content: prompt },
@@ -144,7 +144,7 @@ Score according to ${company.name}'s bar (passingBar: ${company.passingBar}). Be
 
       const response = await groqRetry(() =>
         groq.chat.completions.create({
-          model: "llama-3.3-70b-versatile",
+          model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
           messages: [
             { role: "system", content: "You evaluate answers. Return ONLY JSON without formatting fences." },
             { role: "user", content: prompt },
@@ -215,7 +215,7 @@ Return plain text, no JSON.`;
 
       const finalResponse = await groqRetry(() =>
         groq.chat.completions.create({
-          model: "llama-3.3-70b-versatile",
+          model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
           messages: [
             { role: "user", content: finalPrompt }
           ],
@@ -268,7 +268,7 @@ No markdown. No explanation.`;
 
     const nextResponse = await groqRetry(() =>
       groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
         messages: [
           { role: "system", content: "Return ONLY JSON without markdown formatting." },
           { role: "user", content: nextQPrompt },

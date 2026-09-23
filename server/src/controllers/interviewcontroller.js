@@ -34,7 +34,7 @@ const startInterview = async (req, res) => {
 
     const completion = await groqRetry(() =>
       groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
         messages: [
           { role: "system", content: systemPrompt(domain, currentDifficulty) },
           {
@@ -117,7 +117,7 @@ const submitAnswer = async (req, res) => {
     // 1️⃣ Generate feedback on the answer
     const feedbackResponse = await groqRetry(() =>
       groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
         messages: [
           {
             role: "system",
@@ -278,7 +278,7 @@ You MUST respond in JSON format with these exact keys:
     while (retries < 3) {
         const nextQuestionResponse = await groqRetry(() =>
           groq.chat.completions.create({
-            model: "llama-3.3-70b-versatile",
+            model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
             messages: [
               {
                 role: "system",

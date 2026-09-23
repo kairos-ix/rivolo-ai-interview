@@ -17,7 +17,11 @@ export default function ServerWakeupManager() {
   }, []);
 
   useEffect(() => {
-    if (hasChecked) return;
+    // Only run the wakeup ping in production — locally the server is always up
+    if (hasChecked || process.env.NODE_ENV !== "production") {
+      setHasChecked(true);
+      return;
+    }
 
     let timeoutId: NodeJS.Timeout;
     
@@ -46,9 +50,9 @@ export default function ServerWakeupManager() {
           // If it answered fast, clear the timeout so the popup never shows
           clearTimeout(timeoutId);
         }
-      } catch (error) {
-        // If fetch fails (e.g. CORS on root, though it should wake it up regardless)
-        console.error("Wake ping failed", error);
+      } catch {
+        // Fetch may fail due to CORS on the root path — the request still
+        // reaches the server and wakes it up, so this is intentionally silent.
         clearTimeout(timeoutId);
         setShowPopup(false);
       } finally {

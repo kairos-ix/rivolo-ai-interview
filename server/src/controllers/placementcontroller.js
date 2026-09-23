@@ -94,7 +94,7 @@ Tailor roadmap for ${type}. Max 5 items per array. Be specific, not generic.`;
 
     const response = await groqRetry(() =>
       groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
         messages: [
           { role: "system", content: "You are a placement readiness analysis engine. Return ONLY valid JSON." },
           { role: "user", content: prompt },
